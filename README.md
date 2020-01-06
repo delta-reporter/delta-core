@@ -1,6 +1,6 @@
-# Delta Reporter Launcher Service
+# Delta Reporter Core Service
 
-This service is intended to manage launches that are sent or displayed at Delta Reporter
+This service is intended to manage core data that are sent or displayed at Delta Reporter
 
 This service is designed to be deployed on AWS, GCP or Azure using Serverless framework
 
