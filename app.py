@@ -52,7 +52,8 @@ def projects():
 
     project = models.Project(
         name=params['name'],
-        data=params['data']
+        data=params['data'],
+        project_status_id=params['project_status_id']
     )
     db.session.add(project)
     db.session.commit()
@@ -66,17 +67,53 @@ def projects():
 
     return resp
 
-@app.route("/project_status", methods=['POST'])
-def project_status():
-    data = {'message': 'Database updated'}
+@app.route("/get_projects", methods=['POST'])
+def get_projects():
+    logger.info("/get_projects/")
+    projects = models.Project.query.all()
 
-    project_status = models.ProjectStatus(
-        name='active'
-    )
-    db.session.add(project_status)
-    db.session.commit()
+    if projects:
+        data = []
+        for project in projects:
+            data.append( {
+                'id'  : project.id,
+                'name': project.name,
+                'data': project.data,
+                'project_status': project.project_status.name
+            })
+    else:
+        data = {
+            'message': 'No project with the id provided was found'
+        }
 
-    return jsonify(data)
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
+@app.route("/project/<int:project_id>", methods=['POST'])
+def project(project_id):
+    logger.info("/project/%i", project_id)
+
+    result = models.Project.query.filter_by(id=project_id).first()
+
+    if result:
+        data = {
+            'id'  : result.id,
+            'name': result.name,
+            'data': result.data,
+            'project_status': result.project_status.name
+        }
+    else:
+        data = {
+            'message': 'No project with the id provided was found'
+        }
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
 
 @app.route("/launches", methods=['POST'])
 def launches():
@@ -92,6 +129,17 @@ def testsuites():
 def tests():
     data = {'id': 0, 'suite_id': 0, 'launch_id': 0, 'title': "Test Zero", 'status': 'PASS', 'duration': '3 minutes 23 seconds', 'start': 'timestamp', 'end': 'timestamp', 'screenshots': ['s3://whatever0','s3://whatever1']}
     return jsonify(data)
+
+@app.errorhandler(404)
+def notfound(error):
+    data = {
+        'message'  : 'The endpoint requested was not found'
+    }
+
+    resp = jsonify(data)
+    resp.status_code = 404
+
+    return resp
 
 if __name__ == "__main__":
     app.run(host=os.getenv("HOST", "0.0.0.0"), port=os.getenv("PORT", 5000))

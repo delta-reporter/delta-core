@@ -8,7 +8,10 @@ class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
     data = db.Column(db.JSON)
-    status_id = db.Column(db.Integer)
+    project_status_id = db.Column(db.Integer, db.ForeignKey('project_status.id'),
+        nullable=False)
+    project_status = db.relationship('ProjectStatus',
+        backref=db.backref('project_status', lazy=True))
 
     def __repr__(self):
         return '<Project {}>'.format(self.name)
