@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: b6e99accaca5
+Revision ID: 20ece4cbef9e
 Revises: 
-Create Date: 2020-01-12 21:08:03.054672
+Create Date: 2020-01-18 19:03:32.353463
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'b6e99accaca5'
+revision = '20ece4cbef9e'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -36,6 +36,12 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('name')
     )
+    op.create_table('test_run_status',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=50), nullable=False),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name')
+    )
     op.create_table('test_status',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=50), nullable=False),
@@ -54,15 +60,7 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('name')
     )
-    op.create_table('launches',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('name', sa.String(length=50), nullable=False),
-    sa.Column('data', sa.JSON(), nullable=True),
-    sa.Column('launch_status_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['launch_status_id'], ['launch_status.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_table('projects',
+    op.create_table('project',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=50), nullable=False),
     sa.Column('data', sa.JSON(), nullable=True),
@@ -70,25 +68,54 @@ def upgrade():
     sa.ForeignKeyConstraint(['project_status_id'], ['project_status.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('test_suites',
+    op.create_table('launch',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=50), nullable=False),
+    sa.Column('data', sa.JSON(), nullable=True),
+    sa.Column('launch_status_id', sa.Integer(), nullable=False),
+    sa.Column('project_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['launch_status_id'], ['launch_status.id'], ),
+    sa.ForeignKeyConstraint(['project_id'], ['project.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('test_run',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('data', sa.JSON(), nullable=True),
     sa.Column('start_datetime', sa.DateTime(), nullable=False),
+    sa.Column('end_datetime', sa.DateTime(), nullable=False),
     sa.Column('test_type_id', sa.Integer(), nullable=False),
-    sa.Column('test_suite_status_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['test_suite_status_id'], ['test_suite_status.id'], ),
+    sa.Column('test_run_status_id', sa.Integer(), nullable=False),
+    sa.Column('launch_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['launch_id'], ['launch.id'], ),
+    sa.ForeignKeyConstraint(['test_run_status_id'], ['test_run_status.id'], ),
     sa.ForeignKeyConstraint(['test_type_id'], ['test_type.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('tests',
+    op.create_table('test_suite',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=50), nullable=False),
     sa.Column('data', sa.JSON(), nullable=True),
     sa.Column('start_datetime', sa.DateTime(), nullable=False),
-    sa.Column('status_id', sa.Integer(), nullable=False),
-    sa.Column('resolution_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['resolution_id'], ['test_resolution.id'], ),
-    sa.ForeignKeyConstraint(['status_id'], ['test_status.id'], ),
+    sa.Column('end_datetime', sa.DateTime(), nullable=False),
+    sa.Column('test_suite_status_id', sa.Integer(), nullable=False),
+    sa.Column('test_run_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['test_run_id'], ['test_run.id'], ),
+    sa.ForeignKeyConstraint(['test_suite_status_id'], ['test_suite_status.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name')
+    )
+    op.create_table('test',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=50), nullable=False),
+    sa.Column('data', sa.JSON(), nullable=True),
+    sa.Column('start_datetime', sa.DateTime(), nullable=False),
+    sa.Column('end_datetime', sa.DateTime(), nullable=False),
+    sa.Column('test_status_id', sa.Integer(), nullable=False),
+    sa.Column('test_resolution_id', sa.Integer(), nullable=False),
+    sa.Column('test_suite_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['test_resolution_id'], ['test_resolution.id'], ),
+    sa.ForeignKeyConstraint(['test_status_id'], ['test_status.id'], ),
+    sa.ForeignKeyConstraint(['test_suite_id'], ['test_suite.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###
@@ -96,13 +123,15 @@ def upgrade():
 
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
-    op.drop_table('tests')
-    op.drop_table('test_suites')
-    op.drop_table('projects')
-    op.drop_table('launches')
+    op.drop_table('test')
+    op.drop_table('test_suite')
+    op.drop_table('test_run')
+    op.drop_table('launch')
+    op.drop_table('project')
     op.drop_table('test_type')
     op.drop_table('test_suite_status')
     op.drop_table('test_status')
+    op.drop_table('test_run_status')
     op.drop_table('test_resolution')
     op.drop_table('project_status')
     op.drop_table('launch_status')
