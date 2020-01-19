@@ -1,14 +1,17 @@
 from app import db
-# from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy import event
 
 
 class Project(db.Model):
-    __tablename__ = 'projects'
+    __tablename__ = 'project'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
     data = db.Column(db.JSON)
-    status_id = db.Column(db.Integer)
+    project_status_id = db.Column(db.Integer, db.ForeignKey('project_status.id'),
+        nullable=False)
+    project_status = db.relationship('ProjectStatus',
+        backref=db.backref('project_status', lazy=True))
 
     def __repr__(self):
         return '<Project {}>'.format(self.name)
@@ -18,40 +21,132 @@ class ProjectStatus(db.Model):
     __tablename__ = 'project_status'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False)
+    name = db.Column(db.String(50), nullable=False, unique=True)
 
     def __repr__(self):
         return '<ProjectStatus {}>'.format(self.name)
 
 
 class Launch(db.Model):
-    __tablename__ = 'launches'
+    __tablename__ = 'launch'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
     data = db.Column(db.JSON)
-    status_id = db.Column(db.Integer)
+    launch_status_id = db.Column(db.Integer, db.ForeignKey('launch_status.id'),
+        nullable=False)
+    launch_status = db.relationship('LaunchStatus',
+        backref=db.backref('launch_status', lazy=True))
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'),
+        nullable=False)
+    project = db.relationship('Project',
+        backref=db.backref('project', lazy=True))
 
     def __repr__(self):
         return '<Launch {}>'.format(self.name)
 
 
+class LaunchStatus(db.Model):
+    __tablename__ = 'launch_status'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False, unique=True)
+
+    def __repr__(self):
+        return '<LaunchStatus {}>'.format(self.name)
+
+class TestRun(db.Model):
+    __tablename__ = 'test_run'
+
+    id = db.Column(db.Integer, primary_key=True)
+    data = db.Column(db.JSON)
+    start_datetime = db.Column(db.DateTime, nullable=False)
+    end_datetime = db.Column(db.DateTime, nullable=False)
+    test_type_id = db.Column(db.Integer, db.ForeignKey('test_type.id'),
+        nullable=False)
+    test_type = db.relationship('TestType',
+        backref=db.backref('test_type', lazy=True))
+    test_run_status_id = db.Column(db.Integer, db.ForeignKey('test_run_status.id'),
+        nullable=False)
+    test_run_status = db.relationship('TestRunStatus',
+        backref=db.backref('test_run_status', lazy=True))
+    launch_id = db.Column(db.Integer, db.ForeignKey('launch.id'),
+        nullable=False)
+    launch = db.relationship('Launch',
+        backref=db.backref('launch', lazy=True))
+
+    def __repr__(self):
+        return '<TestRun {}>'.format(self.name)
+
+
+class TestType(db.Model):
+    __tablename__ = 'test_type'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False, unique=True)
+
+    def __repr__(self):
+        return '<TestType {}>'.format(self.name)
+
+
+class TestRunStatus(db.Model):
+    __tablename__ = 'test_run_status'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False, unique=True)
+
+    def __repr__(self):
+        return '<TestRunStatus {}>'.format(self.name)
+
+
+class TestSuite(db.Model):
+    __tablename__ = 'test_suite'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False, unique=True)
+    data = db.Column(db.JSON)
+    start_datetime = db.Column(db.DateTime, nullable=False)
+    end_datetime = db.Column(db.DateTime, nullable=False)
+    test_suite_status_id = db.Column(db.Integer, db.ForeignKey('test_suite_status.id'),
+        nullable=False)
+    test_suite_status = db.relationship('TestSuiteStatus',
+        backref=db.backref('test_suite_status', lazy=True))
+    test_run_id = db.Column(db.Integer, db.ForeignKey('test_run.id'),
+        nullable=False)
+    test_run = db.relationship('TestRun',
+        backref=db.backref('test_run', lazy=True))
+
+
+class TestSuiteStatus(db.Model):
+    __tablename__ = 'test_suite_status'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False, unique=True)
+
+    def __repr__(self):
+        return '<TestSuiteStatus {}>'.format(self.name)
+
+
 class Test(db.Model):
-    __tablename__ = 'tests'
+    __tablename__ = 'test'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
     data = db.Column(db.JSON)
     start_datetime = db.Column(db.DateTime, nullable=False)
-    start_datetime = db.Column(db.DateTime, nullable=False)
-    status_id = db.Column(db.Integer, db.ForeignKey('test_status.id'),
+    end_datetime = db.Column(db.DateTime, nullable=False)
+    test_status_id = db.Column(db.Integer, db.ForeignKey('test_status.id'),
         nullable=False)
-    status = db.relationship('Status',
+    test_status = db.relationship('TestStatus',
         backref=db.backref('test_status', lazy=True))
-    resolution_id = db.Column(db.Integer, db.ForeignKey('test_resolution.id'),
+    test_resolution_id = db.Column(db.Integer, db.ForeignKey('test_resolution.id'),
         nullable=False)
-    resolution = db.relationship('Resolution',
+    test_resolution = db.relationship('TestResolution',
         backref=db.backref('test_resolution', lazy=True))
+    test_suite_id = db.Column(db.Integer, db.ForeignKey('test_suite.id'),
+        nullable=False)
+    test_suite = db.relationship('TestSuite',
+        backref=db.backref('test_suite', lazy=True))
 
     def __repr__(self):
         return '<Test {}>'.format(self.name)
@@ -61,7 +156,7 @@ class TestStatus(db.Model):
     __tablename__ = 'test_status'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False)
+    name = db.Column(db.String(50), nullable=False, unique=True)
 
     def __repr__(self):
         return '<TestStatus {}>'.format(self.name)
@@ -71,45 +166,63 @@ class TestResolution(db.Model):
     __tablename__ = 'test_resolution'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String())
+    name = db.Column(db.String(50), nullable=False, unique=True)
 
     def __repr__(self):
         return '<TestResolution {}>'.format(self.name)
 
 
-class TestSuite(db.Model):
-    __tablename__ = 'test_suites'
+#TODO:
+#   All these event are actually not executed
+#   Will need to check for a better way to
+#   initialize our data
+#  
 
-    id = db.Column(db.Integer, primary_key=True)
-    data = db.Column(db.JSON)
-    start_datetime = db.Column(db.DateTime, nullable=False)
-    start_datetime = db.Column(db.DateTime, nullable=False)
-    status_id = db.Column(db.Integer)
-    test_type_id = db.Column(db.Integer, db.ForeignKey('test_type.id'),
-        nullable=False)
-    test_type = db.relationship('TestType',
-        backref=db.backref('test_type', lazy=True))
-    test_suite_status_id = db.Column(db.Integer, db.ForeignKey('test_suite_status.id'),
-        nullable=False)
-    test_suite_status = db.relationship('TestSuiteStatus',
-        backref=db.backref('test_suite_status', lazy=True))
+@event.listens_for(ProjectStatus.__table__, 'after_create')
+def insert_initial_project_status(*args, **kwargs):
+    db.session.add(ProjectStatus(name='Active'))
+    db.session.add(ProjectStatus(name='Inactive'))
+    db.session.add(ProjectStatus(name='Archived'))
+    db.session.commit()
 
+@event.listens_for(LaunchStatus.__table__, 'after_create')
+def insert_initial_launch_status(*args, **kwargs):
+    db.session.add(LaunchStatus(name='Failed'))
+    db.session.add(LaunchStatus(name='In Process'))
+    db.session.add(LaunchStatus(name='Finished'))
+    db.session.commit()
 
-class TestType(db.Model):
-    __tablename__ = 'test_type'
+@event.listens_for(TestType.__table__, 'after_create')
+def insert_initial_test_type(*args, **kwargs):
+    db.session.add(TestType(name='End to End Tests'))
+    db.session.add(TestType(name='Integration Tests'))
+    db.session.add(TestType(name='Unit Tests'))
+    db.session.commit()
 
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String())
+@event.listens_for(TestRunStatus.__table__, 'after_create')
+def insert_initial_test_type(*args, **kwargs):
+    db.session.add(TestRunStatus(name='Success'))
+    db.session.add(TestRunStatus(name='Failed'))
+    db.session.add(TestRunStatus(name='Running'))
+    db.session.commit()
 
-    def __repr__(self):
-        return '<TestType {}>'.format(self.name)
+@event.listens_for(TestSuiteStatus.__table__, 'after_create')
+def insert_initial_test_suite_status(*args, **kwargs):
+    db.session.add(TestSuiteStatus(name='Failed'))
+    db.session.add(TestSuiteStatus(name='Successful'))
+    db.session.add(TestSuiteStatus(name='Running'))
+    db.session.commit()
 
+@event.listens_for(TestStatus.__table__, 'after_create')
+def insert_initial_test_status(*args, **kwargs):
+    db.session.add(TestStatus(name='Fail'))
+    db.session.add(TestStatus(name='Pass'))
+    db.session.add(TestStatus(name='Running'))
+    db.session.commit()
 
-class TestSuiteStatus(db.Model):
-    __tablename__ = 'test_suite_status'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String())
-
-    def __repr__(self):
-        return '<TestSuiteStatus {}>'.format(self.name)
+@event.listens_for(TestResolution.__table__, 'after_create')
+def insert_initial_test_resolution(*args, **kwargs):
+    db.session.add(TestResolution(name='Test Issue'))
+    db.session.add(TestResolution(name='Environment Issue'))
+    db.session.add(TestResolution(name='Application Issue'))
+    db.session.commit()
