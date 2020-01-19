@@ -1,4 +1,4 @@
-FROM python:3.6-alpine as base
+FROM python:3.7-alpine as base
 
 FROM base as builder 
 RUN mkdir /install
@@ -9,6 +9,7 @@ RUN pip install --install-option="--prefix=/install" -r /requirements.txt
 
 FROM base
 COPY --from=builder /install /usr/local
+RUN apk update && apk add libpq
 ADD . /app
 WORKDIR /app
 EXPOSE 5000
