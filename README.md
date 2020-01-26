@@ -70,6 +70,11 @@ Thats will start PosgreSQL on you local port `54320`, you can connect to it dire
 After the database is up and running, use alembic to restore the schema
 
 `python manage.py db upgrade`
+
+Or using delta_core container:
+
+`docker exec delta_core python manage.py db upgrade`
+
 This command runs the scripts located in `migrations/versions/` in order to apply the changes on the database
 
 if for any reason you want to restore the schema to a previous state, use `python manage.py db downgrade`
