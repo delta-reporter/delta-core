@@ -481,6 +481,53 @@ def get_tests():
 
     return resp
 
+@app.route("/tests_history/test_run_id/<int:test_run_id>", methods=['GET'])
+def get_tests_history_by_test_run(test_run_id):
+    logger.info("/get_tests_history_by_test_run/%i", test_run_id)
+
+    results = db.session.query(models.TestRun, models.TestSuiteHistory, models.TestHistory)\
+        .filter(models.TestRun.id == models.TestSuiteHistory.test_run_id)\
+            .filter(models.TestSuiteHistory.test_run_id == models.TestHistory.test_run_id)\
+                .filter(models.TestRun.id == test_run_id).all()
+
+    if results:
+        data = []
+        for table in results:
+            test_run = table[0]
+            test_suite_history = table[1]
+            test_history = table[2]
+            data.append( {
+                'id'  : test_run.id,
+                'launch' : test_run.launch.name,
+                'test_type': test_run.test_type,
+                'start_datetime': test_run.start_datetime,
+                'end_datetime': test_run.end_datetime,
+                'test_run_status': test_run.test_run_status.name,
+                'test_suite': {
+                    'name': test_suite_history.test_suite.name,
+                    'start_datetime': test_suite_history.start_datetime,
+                    'end_datetime': test_suite_history.end_datetime,
+                    'test_suite_status': test_suite_history.test_suite_status.name
+                },
+                'test': {
+                    'name': test_history.test.name,
+                    'data': test_history.data,
+                    'start_datetime': test_history.start_datetime,
+                    'end_datetime': test_history.end_datetime,
+                    'status': test_history.test_status.name,
+                    'resolution': test_history.test_resolution.name
+                }
+            })
+    else:
+        data = {
+            'message': 'No tests were found'
+        }
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
 @app.route("/test/<int:test_id>", methods=['GET'])
 def get_test_by_test_id(test_id):
     logger.info("/test/%i", test_id)
