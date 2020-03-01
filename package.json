@@ -9,7 +9,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Juan Negrier <juannegrier@gmail.com>",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "devDependencies": {
     "chalk": "^2.1.0",
     "inquirer": "^3.2.3",
