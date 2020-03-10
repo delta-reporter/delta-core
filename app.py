@@ -1,4 +1,6 @@
 import os
+import datetime
+from dateutil.relativedelta import relativedelta
 from logzero import logger
 from flask import Flask, request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
@@ -49,7 +51,20 @@ def initial_setup():
 
     return resp
 
-@app.route("/project", methods=['POST'])
+@app.route("/api/v1/status", methods=['GET'])
+def get_delta_status():
+    logger.info("/api/status")
+
+    data = {
+        'message' : 'Delta Reporter up and running'
+    }
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
+@app.route("/api/v1/project", methods=['POST'])
 def create_project():
     params = request.get_json(force=True)
     logger.info("/projects/%s", params)
@@ -73,7 +88,7 @@ def create_project():
 
     return resp
 
-@app.route("/get_projects", methods=['GET'])
+@app.route("/api/v1/projects", methods=['GET'])
 def get_projects():
     logger.info("/get_projects/")
     projects = models.Project.query.all()
@@ -97,7 +112,7 @@ def get_projects():
 
     return resp
 
-@app.route("/project/<int:project_id>", methods=['GET'])
+@app.route("/api/v1/project/<int:project_id>", methods=['GET'])
 def get_project(project_id):
     logger.info("/project/%i", project_id)
 
@@ -120,7 +135,7 @@ def get_project(project_id):
 
     return resp
 
-@app.route("/launch", methods=['POST'])
+@app.route("/api/v1/launch", methods=['POST'])
 def create_launch():
     params = request.get_json(force=True)
     logger.info("/launches/%s", params)
@@ -144,7 +159,7 @@ def create_launch():
 
     return resp
 
-@app.route("/get_launches", methods=['GET'])
+@app.route("/api/v1/launches", methods=['GET'])
 def get_launches():
     logger.info("/get_launches/")
     launches = models.Launch.query.all()
@@ -169,7 +184,7 @@ def get_launches():
 
     return resp
 
-@app.route("/launch/<int:launch_id>", methods=['GET'])
+@app.route("/api/v1/launch/<int:launch_id>", methods=['GET'])
 def get_launch(launch_id):
     logger.info("/launch/%i", launch_id)
 
@@ -193,7 +208,40 @@ def get_launch(launch_id):
 
     return resp
 
-@app.route("/test_run", methods=['POST'])
+@app.route("/api/v1/launch/project_id/<int:project_id>", methods=['GET'])
+def get_launches_by_project_id(project_id):
+    logger.info("/launches_by_project_id/%i", project_id)
+
+    result = models.Launch.query.filter_by(project_id=project_id).all()
+
+    if result:
+        project = {
+            'project_name': result[0].project.name,
+            'project_status': result[0].project.project_status.name,
+            'launches': []
+        }
+        launches = []
+        for launch in result:
+            launches.append({
+                'id'  : launch.id,
+                'name' : launch.name,
+                'data' : launch.data,
+                'project' : launch.project.name,
+                'launch_status' : launch.launch_status.name
+            })
+        project['launches'] = launches
+        data = project
+    else:
+        data = {
+            'message' : 'No launch with the project id provided was found'
+        }
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
+@app.route("/api/v1/test_run", methods=['POST'])
 def create_test_run():
     params = request.get_json(force=True)
     logger.info("/create_test_run/%s", params)
@@ -210,7 +258,7 @@ def create_test_run():
 
     return resp
 
-@app.route("/test_run", methods=['PUT'])
+@app.route("/api/v1/test_run", methods=['PUT'])
 def update_test_run():
     params = request.get_json(force=True)
     logger.info("/update_test_run/%s", params)
@@ -227,7 +275,7 @@ def update_test_run():
 
     return resp
 
-@app.route("/get_test_runs", methods=['GET'])
+@app.route("/api/v1/test_runs", methods=['GET'])
 def get_test_runs():
     logger.info("/get_test_runs/")
     test_runs = models.TestRun.query.all()
@@ -240,6 +288,7 @@ def get_test_runs():
                 'data': test_run.data,
                 'start_datetime' : test_run.start_datetime,
                 'end_datetime' : test_run.end_datetime,
+                'duration': diff_dates(test_run.start_datetime, test_run.end_datetime),
                 'test_type' : test_run.test_type,
                 'test_run_status' : test_run.test_run_status.name,
                 'launch' : test_run.launch.name
@@ -254,7 +303,7 @@ def get_test_runs():
 
     return resp
 
-@app.route("/test_run/<int:test_run_id>", methods=['GET'])
+@app.route("/api/v1/test_run/<int:test_run_id>", methods=['GET'])
 def get_test_run(test_run_id):
     logger.info("/test_run/%i", test_run_id)
 
@@ -266,6 +315,7 @@ def get_test_run(test_run_id):
             'data': result.data,
             'start_datetime' : result.start_datetime,
             'end_datetime' : result.end_datetime,
+            'duration': diff_dates(result.start_datetime, result.end_datetime),
             'test_type' : result.test_type,
             'test_run_status' : result.test_run_status.name,
             'launch' : result.launch.name
@@ -280,7 +330,42 @@ def get_test_run(test_run_id):
 
     return resp
 
-@app.route("/test_suite", methods=['POST'])
+@app.route("/api/v1/test_run/launch_id/<int:launch_id>", methods=['GET'])
+def get_test_runs_by_launch_id(launch_id):
+    logger.info("/test_run_by_launch_id/%i", launch_id)
+
+    result = models.TestRun.query.filter_by(launch_id=launch_id).all()
+
+    if result:
+        project = {
+            'launch_name': result[0].launch.name,
+            'launch_status': result[0].launch.launch_status.name,
+            'test_runs': []
+        }
+        test_runs = []
+        for test_run in result:
+            test_runs.append({
+                'id'  : test_run.id,
+                'data': test_run.data,
+                'start_datetime' : test_run.start_datetime,
+                'end_datetime' : test_run.end_datetime,
+                'duration': diff_dates(test_run.start_datetime, test_run.end_datetime),
+                'test_type' : test_run.test_type,
+                'test_run_status' : test_run.test_run_status.name
+            })
+        project['test_runs'] = test_runs
+        data = project
+    else:
+        data = {
+            'message' : 'No launch with the launch id provided was found'
+        }
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
+@app.route("/api/v1/test_suite", methods=['POST'])
 def create_test_suite():
     params = request.get_json(force=True)
     logger.info("/create_test_suite/%s", params)
@@ -304,7 +389,7 @@ def create_test_suite():
 
     return resp
 
-@app.route("/test_suite_history", methods=['POST'])
+@app.route("/api/v1/test_suite_history", methods=['POST'])
 def create_test_suite_history():
     params = request.get_json(force=True)
     logger.info("/create_test_suite_history/%s", params)
@@ -329,7 +414,7 @@ def create_test_suite_history():
 
     return resp
 
-@app.route("/test_suite_history", methods=['PUT'])
+@app.route("/api/v1/test_suite_history", methods=['PUT'])
 def update_test_suite_history():
     params = request.get_json(force=True)
     logger.info("/update_test_suite_history/%s", params)
@@ -345,7 +430,7 @@ def update_test_suite_history():
 
     return resp
 
-@app.route("/get_test_suites", methods=['GET'])
+@app.route("/api/v1/test_suites", methods=['GET'])
 def get_test_suites():
     logger.info("/get_test_suites/")
     test_suites = models.TestSuite.query.all()
@@ -369,7 +454,7 @@ def get_test_suites():
 
     return resp
 
-@app.route("/test_suite/<int:test_suite_id>", methods=['GET'])
+@app.route("/api/v1/test_suite/<int:test_suite_id>", methods=['GET'])
 def get_test_suite(test_suite_id):
     logger.info("/test_suite/%i", test_suite_id)
 
@@ -392,7 +477,7 @@ def get_test_suite(test_suite_id):
 
     return resp
 
-@app.route("/test", methods=['POST'])
+@app.route("/api/v1/test", methods=['POST'])
 def create_test():
     params = request.get_json(force=True)
     logger.info("/create_test/%s", params)
@@ -416,7 +501,7 @@ def create_test():
 
     return resp
 
-@app.route("/test_history", methods=['POST'])
+@app.route("/api/v1/test_history", methods=['POST'])
 def create_test_history():
     params = request.get_json(force=True)
     logger.info("/create_test_history/%s", params)
@@ -441,7 +526,7 @@ def create_test_history():
 
     return resp
 
-@app.route("/test_history", methods=['PUT'])
+@app.route("/api/v1/test_history", methods=['PUT'])
 def update_test_history():
     params = request.get_json(force=True)
     logger.info("/update_test_history/%s", params)
@@ -457,7 +542,7 @@ def update_test_history():
 
     return resp
 
-@app.route("/get_tests", methods=['GET'])
+@app.route("/api/v1/tests", methods=['GET'])
 def get_tests():
     logger.info("/get_tests/")
     tests = models.Test.query.all()
@@ -481,7 +566,7 @@ def get_tests():
 
     return resp
 
-@app.route("/tests_history/test_run_id/<int:test_run_id>", methods=['GET'])
+@app.route("/api/v1/tests_history/test_run_id/<int:test_run_id>", methods=['GET'])
 def get_tests_history_by_test_run(test_run_id):
     logger.info("/get_tests_history_by_test_run/%i", test_run_id)
 
@@ -491,44 +576,58 @@ def get_tests_history_by_test_run(test_run_id):
                 .filter(models.TestRun.id == test_run_id).all()
 
     if results:
-        data = []
+        test_suites = []
+        tests = []
+        test_suites_index = {}
+        index = -1
+
+        test_run = {
+            'id': results[0][0].id,
+            'launch': results[0][0].launch.name,
+            'test_type': results[0][0].test_type,
+            'start_datetime': results[0][0].start_datetime,
+            'end_datetime': results[0][0].end_datetime,
+            'duration': diff_dates(results[0][0].start_datetime, results[0][0].end_datetime),
+            'test_run_status': results[0][0].test_run_status.name,
+            'test_suites': []
+        }
         for table in results:
-            test_run = table[0]
             test_suite_history = table[1]
             test_history = table[2]
-            data.append( {
-                'id'  : test_run.id,
-                'launch' : test_run.launch.name,
-                'test_type': test_run.test_type,
-                'start_datetime': test_run.start_datetime,
-                'end_datetime': test_run.end_datetime,
-                'test_run_status': test_run.test_run_status.name,
-                'test_suite': {
+            if test_suites == [] or test_suite_history.test_suite.id not in list(test_suites_index.keys()):
+                index = index + 1
+                test_suites_index[test_suite_history.test_suite.id] = index
+                test_suites.append({
+                    'id': test_suite_history.test_suite.id,
                     'name': test_suite_history.test_suite.name,
                     'start_datetime': test_suite_history.start_datetime,
                     'end_datetime': test_suite_history.end_datetime,
-                    'test_suite_status': test_suite_history.test_suite_status.name
-                },
-                'test': {
-                    'name': test_history.test.name,
-                    'data': test_history.data,
-                    'start_datetime': test_history.start_datetime,
-                    'end_datetime': test_history.end_datetime,
-                    'status': test_history.test_status.name,
-                    'resolution': test_history.test_resolution.name
-                }
+                    'duration': diff_dates(test_suite_history.start_datetime, test_suite_history.end_datetime),
+                    'test_suite_status': test_suite_history.test_suite_status.name,
+                    'tests': []
+                })
+            test_suites[test_suites_index.get(test_suite_history.test_suite.id)]['tests'].append({
+                'id': test_history.test.id,
+                'name': test_history.test.name,
+                'data': test_history.data,
+                'start_datetime': test_history.start_datetime,
+                'end_datetime': test_history.end_datetime,
+                'duration': diff_dates(test_history.start_datetime, test_history.end_datetime),
+                'status': test_history.test_status.name,
+                'resolution': test_history.test_resolution.name
             })
+        test_run['test_suites'].append(test_suites)
+        data = test_run
     else:
         data = {
             'message': 'No tests were found'
         }
-
     resp = jsonify(data)
     resp.status_code = 200
 
     return resp
 
-@app.route("/test/<int:test_id>", methods=['GET'])
+@app.route("/api/v1/test/<int:test_id>", methods=['GET'])
 def get_test_by_test_id(test_id):
     logger.info("/test/%i", test_id)
 
@@ -551,7 +650,7 @@ def get_test_by_test_id(test_id):
 
     return resp
 
-@app.route("/tests/test_status/<int:test_status_id>", methods=['GET'])
+@app.route("/api/v1/tests/test_status/<int:test_status_id>", methods=['GET'])
 def get_tests_by_test_status_id(test_status_id):
     logger.info("/tests_by_test_status_id/%i", test_status_id)
 
@@ -566,6 +665,7 @@ def get_tests_by_test_status_id(test_status_id):
                 'data': test_history.data,
                 'start_datetime' : test_history.start_datetime,
                 'end_datetime' : test_history.end_datetime,
+                'duration': diff_dates(test_history.start_datetime, test_history.end_datetime),
                 'test_status' : test_history.test_status.name,
                 'test_resolution' : test_history.test_resolution.name
             })
@@ -579,7 +679,7 @@ def get_tests_by_test_status_id(test_status_id):
 
     return resp
 
-@app.route("/tests/test_resolution/<int:test_resolution_id>", methods=['GET'])
+@app.route("/api/v1/tests/test_resolution/<int:test_resolution_id>", methods=['GET'])
 def get_tests_by_test_resolution_id(test_resolution_id):
     logger.info("/tests_by_test_resolution_id/%i", test_resolution_id)
 
@@ -594,6 +694,7 @@ def get_tests_by_test_resolution_id(test_resolution_id):
                 'data': test_history.data,
                 'start_datetime' : test_history.start_datetime,
                 'end_datetime' : test_history.end_datetime,
+                'duration': diff_dates(test_history.start_datetime, test_history.end_datetime),
                 'test_status' : test_history.test_status.name,
                 'test_resolution' : test_history.test_resolution.name
             })
@@ -607,7 +708,7 @@ def get_tests_by_test_resolution_id(test_resolution_id):
 
     return resp
 
-@app.route("/tests/test_suite/<int:test_suite_id>", methods=['GET'])
+@app.route("/api/v1/tests/test_suite/<int:test_suite_id>", methods=['GET'])
 def get_tests_by_test_suite_id(test_suite_id):
     logger.info("/tests_by_test_suite_id/%i", test_suite_id)
 
@@ -628,6 +729,7 @@ def get_tests_by_test_suite_id(test_suite_id):
                 'data': test_history.data,
                 'start_datetime' : test_history.start_datetime,
                 'end_datetime' : test_history.end_datetime,
+                'duration': diff_dates(test_history.start_datetime, test_history.end_datetime),
                 'test_status' : test_history.test_status.name,
                 'test_resolution' : test_history.test_resolution.name,
                 'test_suite' : test_suite.name,
@@ -653,6 +755,23 @@ def notfound(error):
     resp.status_code = 404
 
     return resp
+
+def diff_dates(date1, date2):
+    if not date1:
+        return None
+    if not date2:
+        date2 = datetime.datetime.now()
+
+    diff = relativedelta(date2, date1)
+ 
+    return {
+        'years': diff.years,
+        'months': diff.months,
+        'days': diff.days,
+        'hours': diff.hours,
+        'minutes': diff.minutes,
+        'seconds': diff.seconds
+        }
 
 if __name__ == "__main__":
     app.run(host=os.getenv("HOST", "0.0.0.0"), port=os.getenv("PORT", 5000))
