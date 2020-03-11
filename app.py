@@ -34,6 +34,8 @@ def initial_setup():
     db.session.add(models.TestStatus(name='Failed'))
     db.session.add(models.TestStatus(name='Passed'))
     db.session.add(models.TestStatus(name='Running'))
+    db.session.add(models.TestStatus(name='Incomplete'))
+    db.session.add(models.TestStatus(name='Skipped'))
     db.session.add(models.TestResolution(name='Not set'))
     db.session.add(models.TestResolution(name='Working as expected'))
     db.session.add(models.TestResolution(name='Test Issue'))

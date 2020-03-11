@@ -23,7 +23,9 @@ class Constants():
     test_status = {
         'Failed': 1,
         'Passed': 2,
-        'Running': 3
+        'Running': 3,
+        'Incomplete': 4,
+        'Skipped': 5
         }
     test_resolution = {
         'Not set': 1,
