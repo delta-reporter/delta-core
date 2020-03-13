@@ -57,9 +57,7 @@ def initial_setup():
 def get_delta_status():
     logger.info("/api/status")
 
-    data = {
-        'message' : 'Delta Reporter up and running'
-    }
+    data =  'Delta Reporter up and running'
 
     resp = jsonify(data)
     resp.status_code = 200
@@ -333,11 +331,6 @@ def get_test_runs_by_launch_id(launch_id):
     result = models.TestRun.query.filter_by(launch_id=launch_id).all()
 
     if result:
-        project = {
-            'launch_name': result[0].launch.name,
-            'launch_status': result[0].launch.launch_status.name,
-            'test_runs': []
-        }
         test_runs = []
         for test_run in result:
             test_runs.append({
@@ -347,10 +340,11 @@ def get_test_runs_by_launch_id(launch_id):
                 'end_datetime' : test_run.end_datetime,
                 'duration': diff_dates(test_run.start_datetime, test_run.end_datetime),
                 'test_type' : test_run.test_type,
-                'test_run_status' : test_run.test_run_status.name
+                'test_run_status' : test_run.test_run_status.name,
+                'launch_name': test_run.launch.name,
+                'launch_status': test_run.launch.launch_status.name,
             })
-        project['test_runs'] = test_runs
-        data = [project]
+        data = test_runs
     else:
         data = {
             'message' : 'No launch with the launch id provided was found'
@@ -552,7 +546,7 @@ def get_tests_suite_history_by_test_run(test_run_id):
         for table in results:
             test_suite_history = table[1]
             test_suites_history.append({
-                'id': test_suite_history.id,
+                'test_suite_history_id': test_suite_history.id,
                 'test_suite_id': test_suite_history.test_suite.id,
                 'name': test_suite_history.test_suite.name,
                 'start_datetime': test_suite_history.start_datetime,
