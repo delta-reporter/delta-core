@@ -153,6 +153,8 @@ class TestHistory(db.Model):
     end_datetime = db.Column(db.DateTime)
     trace = db.Column(db.String)
     file = db.Column(db.String(2000))
+    message = db.Column(db.String(2000))
+    error_type = db.Column(db.String(2000))
     retries = db.Column(db.Integer)
     test_id = db.Column(db.Integer, db.ForeignKey('test.id'),
         nullable=False)

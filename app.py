@@ -535,7 +535,7 @@ def update_test_history():
     params = request.get_json(force=True)
     logger.info("/update_test_history/%s", params)
 
-    crud.Update.update_test_history(params.get('test_history_id'), params.get('end_datetime'), params.get('trace'), params.get('file'), params.get('retries'), params.get('test_status'))
+    crud.Update.update_test_history(params.get('test_history_id'), params.get('end_datetime'), params.get('trace'), params.get('file'), params.get('message'), params.get('error_type'), params.get('retries'), params.get('test_status'))
 
     data = {
         'message' : 'Test history updated successfully'
@@ -680,6 +680,8 @@ def get_tests_history_by_test_run(test_run_id):
                 'name': test_history.test.name,
                 'trace': test_history.trace,
                 'file': test_history.file,
+                'message': test_history.message,
+                'error_type': test_history.error_type,
                 'retries': test_history.retries,
                 'start_datetime': test_history.start_datetime,
                 'end_datetime': test_history.end_datetime,

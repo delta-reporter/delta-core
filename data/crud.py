@@ -109,11 +109,13 @@ class Create():
 class Update():
 
     @staticmethod
-    def update_test_history(test_history_id, end_datetime, trace, file, retries, test_status):
+    def update_test_history(test_history_id, end_datetime, trace, file, message, error_type, retries, test_status):
         test_history = db.session.query(models.TestHistory).get(test_history_id)
         test_history.end_datetime = end_datetime
         test_history.trace = trace
         test_history.file = file
+        test_history.message = message
+        test_history.error_type = error_type
         test_history.retries = retries
         test_history.test_status_id = constants.Constants.test_status.get(test_status)
 
