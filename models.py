@@ -97,6 +97,8 @@ class TestSuite(db.Model):
     name = db.Column(db.String(100), nullable=False)
     data = db.Column(db.JSON)
     test_type = db.Column(db.String(50), nullable=False)
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'),
+        nullable=False)
 
 
 class TestSuiteHistory(db.Model):
@@ -149,7 +151,11 @@ class TestHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     start_datetime = db.Column(db.DateTime)
     end_datetime = db.Column(db.DateTime)
-    data = db.Column(db.JSON)
+    trace = db.Column(db.String)
+    file = db.Column(db.String(2000))
+    message = db.Column(db.String(2000))
+    error_type = db.Column(db.String(2000))
+    retries = db.Column(db.Integer)
     test_id = db.Column(db.Integer, db.ForeignKey('test.id'),
         nullable=False)
     test = db.relationship('Test',
@@ -163,6 +169,8 @@ class TestHistory(db.Model):
     test_resolution = db.relationship('TestResolution',
         backref=db.backref('test_resolution', lazy=True))
     test_run_id = db.Column(db.Integer, db.ForeignKey('test_run.id'),
+        nullable=False)
+    test_suite_history_id = db.Column(db.Integer, db.ForeignKey('test_suite_history.id'),
         nullable=False)
 
     def __repr__(self):

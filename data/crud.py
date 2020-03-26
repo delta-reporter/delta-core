@@ -52,9 +52,10 @@ class Create():
         return test_run.id
 
     @staticmethod
-    def create_test_suite(name, data, test_type):
+    def create_test_suite(name, project_id, data, test_type):
         test_suite = models.TestSuite(
             name=name,
+            project_id=project_id,
             data=data,
             test_type=test_type
         )
@@ -90,14 +91,14 @@ class Create():
         return test.id
 
     @staticmethod
-    def create_test_history(start_datetime, data, test_id, test_run_id):
+    def create_test_history(start_datetime, test_id, test_run_id, test_suite_history_id):
         test_history = models.TestHistory(
             start_datetime=start_datetime,
-            data=data,
             test_id=test_id,
             test_status_id=constants.Constants.test_status['Running'],
             test_resolution_id=constants.Constants.test_resolution['Not set'],
-            test_run_id=test_run_id
+            test_run_id=test_run_id,
+            test_suite_history_id=test_suite_history_id
         )
         db.session.add(test_history)
         session_commit()
@@ -108,10 +109,14 @@ class Create():
 class Update():
 
     @staticmethod
-    def update_test_history(test_history_id, end_datetime, data, test_status):
+    def update_test_history(test_history_id, end_datetime, trace, file, message, error_type, retries, test_status):
         test_history = db.session.query(models.TestHistory).get(test_history_id)
         test_history.end_datetime = end_datetime
-        test_history.data = data
+        test_history.trace = trace
+        test_history.file = file
+        test_history.message = message
+        test_history.error_type = error_type
+        test_history.retries = retries
         test_history.test_status_id = constants.Constants.test_status.get(test_status)
 
         session_commit()

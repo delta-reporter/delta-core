@@ -17,7 +17,7 @@ from data import crud
 def main():
     return render_template('index.html')
 
-@app.route("/initial_setup", methods=['POST'])
+@app.route("/api/v1/initial_setup", methods=['POST'])
 def initial_setup():
     db.session.add(models.ProjectStatus(name='Active'))
     db.session.add(models.ProjectStatus(name='Inactive'))
@@ -360,10 +360,17 @@ def create_test_suite():
     params = request.get_json(force=True)
     logger.info("/create_test_suite/%s", params)
 
-    test_suite_check = models.TestSuite.query.filter_by(name=params.get('name'), test_type=params.get('test_type')).first()
+    project_check = models.Project.query.filter_by(name=params['project']).first()
+
+    if not project_check:
+        project_id = crud.Create.create_project(params['project'])
+    else:
+        project_id = project_check.id
+
+    test_suite_check = models.TestSuite.query.filter_by(name=params.get('name'), project_id=project_id, test_type=params.get('test_type')).first()
 
     if not test_suite_check:
-        test_suite_id = crud.Create.create_test_suite(params.get('name'), None, params.get('test_type'))
+        test_suite_id = crud.Create.create_test_suite(params.get('name'), project_id, None, params.get('test_type'))
         message = 'New test suite added successfully'
     else:
         test_suite_id = test_suite_check.id
@@ -384,10 +391,17 @@ def create_test_suite_history():
     params = request.get_json(force=True)
     logger.info("/create_test_suite_history/%s", params)
 
-    test_suite_check = models.TestSuite.query.filter_by(name=params.get('name'), test_type=params.get('test_type')).first()
+    project_check = models.Project.query.filter_by(name=params['project']).first()
+
+    if not project_check:
+        project_id = crud.Create.create_project(params['project'])
+    else:
+        project_id = project_check.id
+
+    test_suite_check = models.TestSuite.query.filter_by(name=params.get('name'), project_id=project_id, test_type=params.get('test_type')).first()
 
     if not test_suite_check:
-        test_suite_id = crud.Create.create_test_suite(params.get('name'), None, params.get('test_type'))
+        test_suite_id = crud.Create.create_test_suite(params.get('name'), project_id, None, params.get('test_type'))
     else:
         test_suite_id = test_suite_check.id
 
@@ -503,7 +517,7 @@ def create_test_history():
     else:
         test_id = test_check.id
 
-    test_history_id = crud.Create.create_test_history(params.get('start_datetime'), params.get('data'), test_id, params.get('test_run_id'))
+    test_history_id = crud.Create.create_test_history(params.get('start_datetime'), test_id, params.get('test_run_id'), params.get('test_suite_history_id'))
 
     data = {
         'message' : 'New test history added successfully',
@@ -521,7 +535,7 @@ def update_test_history():
     params = request.get_json(force=True)
     logger.info("/update_test_history/%s", params)
 
-    crud.Update.update_test_history(params.get('test_history_id'), params.get('end_datetime'), params.get('data'), params.get('test_status'))
+    crud.Update.update_test_history(params.get('test_history_id'), params.get('end_datetime'), params.get('trace'), params.get('file'), params.get('message'), params.get('error_type'), params.get('retries'), params.get('test_status'))
 
     data = {
         'message' : 'Test history updated successfully'
@@ -661,9 +675,14 @@ def get_tests_history_by_test_run(test_run_id):
                     'tests': []
                 })
             test_suites[test_suites_index.get(test_suite_history.test_suite.id)]['tests'].append({
-                'id': test_history.test.id,
+                'id': test_history.id,
+                'test_id': test_history.test.id,
                 'name': test_history.test.name,
-                'data': test_history.data,
+                'trace': test_history.trace,
+                'file': test_history.file,
+                'message': test_history.message,
+                'error_type': test_history.error_type,
+                'retries': test_history.retries,
                 'start_datetime': test_history.start_datetime,
                 'end_datetime': test_history.end_datetime,
                 'duration': diff_dates(test_history.start_datetime, test_history.end_datetime),
@@ -853,7 +872,8 @@ def diff_dates(date1, date2):
         'days': diff.days,
         'hours': diff.hours,
         'minutes': diff.minutes,
-        'seconds': diff.seconds
+        'seconds': diff.seconds,
+        'microseconds': diff.microseconds
         }
 
 if __name__ == "__main__":
