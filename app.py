@@ -791,7 +791,6 @@ def get_tests_history_by_test_status_and_test_run_id(test_status_id, test_run_id
                 {
                     "id": test_history.id,
                     "name": test_history.test.name,
-                    "data": test_history.data,
                     "start_datetime": test_history.start_datetime,
                     "end_datetime": test_history.end_datetime,
                     "duration": diff_dates(
