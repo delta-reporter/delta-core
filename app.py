@@ -135,6 +135,30 @@ def create_launch():
 
     return resp
 
+
+@app.route("/api/v1/finish_launch", methods=["PUT"])
+def finish_launch():
+    params = request.get_json(force=True)
+    logger.info("/update_launch/%s", params)
+
+    failed_runs = crud.Read.test_runs_failed_by_launch_id(params.get("launch_id"))
+
+    if failed_runs:
+        launch_id = crud.Update.update_launch(
+            params.get("launch_id"), "Failed"
+        )
+    else:
+        launch_id = crud.Update.update_launch(
+            params.get("launch_id"), "Successful"
+        )
+
+    data = {"message": "Launch updated successfully", "id": launch_id}
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
 @app.route("/api/v1/launch/<int:launch_id>", methods=["GET"])
 def get_launch(launch_id):
     logger.info("/launch/%i", launch_id)
@@ -485,6 +509,23 @@ def update_test_history():
 
     return resp
 
+@app.route("/api/v1/test_history_resolution", methods=["PUT"])
+def update_test_history_resolution():
+    params = request.get_json(force=True)
+    logger.info("/update_test_history_resolution/%s", params)
+
+    crud.Update.update_test_history_resolution(
+        params.get("test_history_id"),
+        params.get("test_resolution")
+    )
+
+    data = {"message": "Test history resolution updated successfully"}
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
 
 @app.route("/api/v1/tests_suite_history/test_run/<int:test_run_id>", methods=["GET"])
 def get_tests_suite_history_by_test_run(test_run_id):
@@ -713,7 +754,6 @@ def get_tests_history_by_test_status_id(test_status_id):
                 {
                     "id": test_history.id,
                     "name": test_history.test.name,
-                    "data": test_history.data,
                     "start_datetime": test_history.start_datetime,
                     "end_datetime": test_history.end_datetime,
                     "duration": diff_dates(
@@ -747,7 +787,6 @@ def get_tests_history_by_test_resolution_id(test_resolution_id):
                 {
                     "id": test_history.id,
                     "name": test_history.test.name,
-                    "data": test_history.data,
                     "start_datetime": test_history.start_datetime,
                     "end_datetime": test_history.end_datetime,
                     "duration": diff_dates(
@@ -782,7 +821,6 @@ def get_tests_history_by_test_suite_id(test_suite_id):
                 {
                     "id": test_history.id,
                     "name": test.name,
-                    "data": test_history.data,
                     "start_datetime": test_history.start_datetime,
                     "end_datetime": test_history.end_datetime,
                     "duration": diff_dates(
