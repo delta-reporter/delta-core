@@ -10,7 +10,6 @@ app.config.from_object(os.environ["APP_SETTINGS"])
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
-import models
 from data import crud
 
 
@@ -49,7 +48,7 @@ def create_project():
     params = request.get_json(force=True)
     logger.info("/projects/%s", params)
 
-    project_check = models.Project.query.filter_by(name=params["name"]).first()
+    project_check = crud.Read.project_by_name(params["name"])
 
     if not project_check:
         project_id = crud.Create.create_project(params["name"])
@@ -69,7 +68,7 @@ def create_project():
 @app.route("/api/v1/projects", methods=["GET"])
 def get_projects():
     logger.info("/get_projects/")
-    projects = models.Project.query.all()
+    projects = crud.Read.projects()
 
     if projects:
         data = []
@@ -135,33 +134,6 @@ def create_launch():
     resp.status_code = 200
 
     return resp
-
-
-@app.route("/api/v1/launches", methods=["GET"])
-def get_launches():
-    logger.info("/get_launches/")
-    launches = models.Launch.query.all()
-
-    if launches:
-        data = []
-        for launch in launches:
-            data.append(
-                {
-                    "id": launch.id,
-                    "name": launch.name,
-                    "data": launch.data,
-                    "project": launch.project.name,
-                    "launch_status": launch.launch_status.name,
-                }
-            )
-    else:
-        data = {"message": "No launches were found"}
-
-    resp = jsonify(data)
-    resp.status_code = 200
-
-    return resp
-
 
 @app.route("/api/v1/launch/<int:launch_id>", methods=["GET"])
 def get_launch(launch_id):
@@ -247,37 +219,6 @@ def update_test_run():
     )
 
     data = {"message": "Test run updated successfully", "id": test_run_id}
-
-    resp = jsonify(data)
-    resp.status_code = 200
-
-    return resp
-
-
-@app.route("/api/v1/test_runs", methods=["GET"])
-def get_test_runs():
-    logger.info("/get_test_runs/")
-    test_runs = models.TestRun.query.all()
-
-    if test_runs:
-        data = []
-        for test_run in test_runs:
-            data.append(
-                {
-                    "id": test_run.id,
-                    "data": test_run.data,
-                    "start_datetime": test_run.start_datetime,
-                    "end_datetime": test_run.end_datetime,
-                    "duration": diff_dates(
-                        test_run.start_datetime, test_run.end_datetime
-                    ),
-                    "test_type": test_run.test_type,
-                    "test_run_status": test_run.test_run_status.name,
-                    "launch": test_run.launch.name,
-                }
-            )
-    else:
-        data = {"message": "No test runs were found"}
 
     resp = jsonify(data)
     resp.status_code = 200
@@ -433,31 +374,6 @@ def update_test_suite_history():
     )
 
     data = {"message": "Test suite history updated successfully"}
-
-    resp = jsonify(data)
-    resp.status_code = 200
-
-    return resp
-
-
-@app.route("/api/v1/test_suites", methods=["GET"])
-def get_test_suites():
-    logger.info("/get_test_suites/")
-    test_suites = models.TestSuite.query.all()
-
-    if test_suites:
-        data = []
-        for test_suite in test_suites:
-            data.append(
-                {
-                    "id": test_suite.id,
-                    "name": test_suite.name,
-                    "data": test_suite.data,
-                    "test_type": test_suite.test_type,
-                }
-            )
-    else:
-        data = {"message": "No test suites were found"}
 
     resp = jsonify(data)
     resp.status_code = 200
@@ -643,31 +559,6 @@ def get_tests_suite_history_by_test_status_and_test_run_id(
         data = test_suites_history
     else:
         data = {"message": "No tests suites were found"}
-    resp = jsonify(data)
-    resp.status_code = 200
-
-    return resp
-
-
-@app.route("/api/v1/tests", methods=["GET"])
-def get_tests():
-    logger.info("/get_tests/")
-    tests = models.Test.query.all()
-
-    if tests:
-        data = []
-        for test in tests:
-            data.append(
-                {
-                    "id": test.id,
-                    "name": test.name,
-                    "data": test.data,
-                    "test_suite_id": test.test_suite_id,
-                }
-            )
-    else:
-        data = {"message": "No tests were found"}
-
     resp = jsonify(data)
     resp.status_code = 200
 

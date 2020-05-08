@@ -9,7 +9,7 @@ def session_commit():
     try:
         db.session.commit()
     except exc.SQLAlchemyError as e:
-        logger.warning(e)
+        logger.error(e)
         db.session.rollback()
 
 
@@ -39,7 +39,7 @@ class Create:
         db.session.add(models.TestResolution(name="Environment Issue"))
         db.session.add(models.TestResolution(name="Application Issue"))
 
-        db.session.commit()
+        session_commit()
 
         return
 
@@ -132,112 +132,242 @@ class Create:
 
 class Read:
     @staticmethod
+    def projects():
+        try:
+            projects = models.Project.query.all()
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            projects = None
+
+        return projects
+
+    @staticmethod
     def project_by_id(project_id):
-        return models.Project.query.filter_by(id=project_id).first()
+        try:
+            project = models.Project.query.filter_by(id=project_id).first()
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            project = None
+
+        return project
 
     @staticmethod
     def project_by_name(project_name):
-        return models.Project.query.filter_by(name=project_name).first()
+        try:
+            project = models.Project.query.filter_by(name=project_name).first()
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            project = None
+
+        return project
 
     @staticmethod
     def launch_by_id(launch_id):
-        return models.Launch.query.filter_by(id=launch_id).first()
+        try:
+            launch = models.Launch.query.filter_by(id=launch_id).first()
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            launch = None
+
+        return launch
 
     @staticmethod
     def launch_by_project_id(project_id):
-        return models.Launch.query.filter_by(project_id=project_id).all()
+        try:
+            launch = models.Launch.query.filter_by(project_id=project_id).all()
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            launch = None
+
+        return launch
 
     @staticmethod
     def test_run_by_id(test_run_id):
-        return models.TestRun.query.filter_by(id=test_run_id).first()
+        try:
+            test_run = models.TestRun.query.filter_by(id=test_run_id).first()
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            test_run = None
+
+        return test_run
 
     @staticmethod
     def test_run_by_launch_id(launch_id):
-        return models.TestRun.query.filter_by(launch_id=launch_id).all()
+        try:
+            test_run = models.TestRun.query.filter_by(launch_id=launch_id).all()
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            test_run = None
+
+        return test_run
 
     @staticmethod
     def test_suite_by_id(test_suite_id):
-        return models.TestSuite.query.filter_by(id=test_suite_id).first()
+        try:
+            test_suite = models.TestSuite.query.filter_by(id=test_suite_id).first()
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            test_suite = None
+
+        return test_suite
 
     @staticmethod
     def test_suite_by_name_project_test_type(name, project_id, test_type):
-        return models.TestSuite.query.filter_by(
-            name=name, project_id=project_id, test_type=test_type
-        ).first()
+        try:
+            test_suite = models.TestSuite.query.filter_by(
+                name=name, project_id=project_id, test_type=test_type
+            ).first()
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            test_suite = None
+
+        return test_suite
 
     @staticmethod
     def test_by_name(test_name):
-        return models.Test.query.filter_by(name=test_name).first()
+        try:
+            test =  models.Test.query.filter_by(name=test_name).first()
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            test = None
+
+        return test
 
     @staticmethod
     def test_by_id(test_id):
-        return models.Test.query.filter_by(id=test_id).first()
+        try:
+            test = models.Test.query.filter_by(id=test_id).first()
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            test = None
+
+        return test
 
     @staticmethod
     def test_suite_history_by_test_run(test_run_id):
-        return (
-            db.session.query(models.TestRun, models.TestSuiteHistory)
-            .filter(models.TestRun.id == models.TestSuiteHistory.test_run_id)
-            .filter(models.TestRun.id == test_run_id)
-            .all()
-        )
+        try:
+            test_suite_history = (
+                db.session.query(models.TestRun, models.TestSuiteHistory)
+                .filter(models.TestRun.id == models.TestSuiteHistory.test_run_id)
+                .filter(models.TestRun.id == test_run_id)
+                .all()
+            )
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            test_suite_history = None
+
+        return test_suite_history
 
     @staticmethod
     def test_suite_history_by_test_status_and_test_run_id(
         test_suite_status_id, test_run_id
     ):
-        return (
-            db.session.query(models.TestRun, models.TestSuiteHistory)
-            .filter(models.TestRun.id == models.TestSuiteHistory.test_run_id)
-            .filter(models.TestRun.id == test_run_id)
-            .filter(
-                models.TestSuiteHistory.test_suite_status_id == test_suite_status_id
+        try:
+            test_suite_history = (
+                db.session.query(models.TestRun, models.TestSuiteHistory)
+                .filter(models.TestRun.id == models.TestSuiteHistory.test_run_id)
+                .filter(models.TestRun.id == test_run_id)
+                .filter(
+                    models.TestSuiteHistory.test_suite_status_id == test_suite_status_id
+                )
+                .all()
             )
-            .all()
-        )
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            test_suite_history = None
+
+        return test_suite_history
 
     @staticmethod
     def test_history_by_test_run(test_run_id):
-        return (
-            db.session.query(
-                models.TestRun, models.TestSuiteHistory, models.TestHistory
+        try:
+            test_history = (
+                db.session.query(
+                    models.TestRun, models.TestSuiteHistory, models.TestHistory
+                )
+                .filter(models.TestRun.id == models.TestSuiteHistory.test_run_id)
+                .filter(
+                    models.TestSuiteHistory.test_run_id == models.TestHistory.test_run_id
+                )
+                .filter(
+                    models.TestSuiteHistory.id == models.TestHistory.test_suite_history_id
+                )
+                .filter(models.TestRun.id == test_run_id)
+                .all()
             )
-            .filter(models.TestRun.id == models.TestSuiteHistory.test_run_id)
-            .filter(
-                models.TestSuiteHistory.test_run_id == models.TestHistory.test_run_id
-            )
-            .filter(
-                models.TestSuiteHistory.id == models.TestHistory.test_suite_history_id
-            )
-            .filter(models.TestRun.id == test_run_id)
-            .all()
-        )
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            test_history = None
+
+        return test_history
 
     @staticmethod
     def test_history_by_test_status_and_test_run_id(test_status_id, test_run_id):
-        return models.TestHistory.query.filter_by(
-            test_status_id=test_status_id, test_run_id=test_run_id
-        ).all()
+        try:
+            test_history = models.TestHistory.query.filter_by(
+                test_status_id=test_status_id, test_run_id=test_run_id
+            ).all()
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            test_history = None
+
+        return test_history
 
     @staticmethod
     def test_history_by_test_status_id(test_status_id):
-        return models.TestHistory.query.filter_by(test_status_id=test_status_id).all()
+        try:
+            test_history = models.TestHistory.query.filter_by(test_status_id=test_status_id).all()
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            test_history = None
+
+        return test_history
 
     @staticmethod
     def test_history_by_test_resolution_id(test_resolution_id):
-        return models.TestHistory.query.filter_by(
-            test_resolution_id=test_resolution_id
-        ).all()
+        try:
+            test_history = models.TestHistory.query.filter_by(
+                test_resolution_id=test_resolution_id
+            ).all()
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            test_history = None
+
+        return test_history
 
     @staticmethod
     def test_history_by_test_suite_id(test_suite_id):
-        return (
-            db.session.query(models.TestHistory, models.Test, models.TestSuite)
-            .filter(models.Test.test_suite_id == models.TestSuite.id)
-            .filter(models.TestHistory.test_id == models.Test.id)
-            .filter(models.Test.test_suite_id == test_suite_id)
-            .all()
-        )
+        try:
+            test_history = (
+                db.session.query(models.TestHistory, models.Test, models.TestSuite)
+                .filter(models.Test.test_suite_id == models.TestSuite.id)
+                .filter(models.TestHistory.test_id == models.Test.id)
+                .filter(models.Test.test_suite_id == test_suite_id)
+                .all()
+            )
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            test_history = None
+
+        return test_history
 
 
 class Update:
