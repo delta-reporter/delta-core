@@ -178,7 +178,7 @@ class Read:
     @staticmethod
     def launch_by_project_id(project_id):
         try:
-            launch = models.Launch.query.filter_by(project_id=project_id).all()
+            launch = models.Launch.query.filter_by(project_id=project_id).order_by(models.Launch.id.desc()).all()
         except exc.SQLAlchemyError as e:
             logger.error(e)
             db.session.rollback()
@@ -207,6 +207,17 @@ class Read:
             test_run = None
 
         return test_run
+
+    @staticmethod
+    def test_runs_failed_by_launch_id(launch_id):
+        try:
+            failed_runs = models.TestRun.query.filter_by(launch_id=launch_id, test_run_status_id=constants.Constants.test_run_status["Failed"]).all()
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            failed_runs = None
+
+        return failed_runs
 
     @staticmethod
     def test_suite_by_id(test_suite_id):
@@ -396,6 +407,15 @@ class Update:
         return test_history.id
 
     @staticmethod
+    def update_test_history_resolution(test_history_id, test_resolution):
+        test_history = db.session.query(models.TestHistory).get(test_history_id)
+        test_history.test_resolution_id = constants.Constants.test_resolution.get(test_resolution)
+
+        session_commit()
+
+        return test_history.id
+
+    @staticmethod
     def update_test_suite_history(
         test_suite_history_id, end_datetime, data, test_suite_status
     ):
@@ -424,3 +444,14 @@ class Update:
         session_commit()
 
         return test_run.id
+
+    @staticmethod
+    def update_launch(launch_id, launch_status):
+        launch = db.session.query(models.Launch).get(launch_id)
+        launch.launch_status_id = constants.Constants.launch_status.get(
+            launch_status
+        )
+
+        session_commit()
+
+        return launch.id

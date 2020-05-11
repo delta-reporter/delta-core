@@ -11,12 +11,11 @@
 				"method": "POST",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5001/api/v1/initial_setup",
-					"protocol": "http",
+					"raw": "localhost:5000/api/v1/initial_setup",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -40,7 +39,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"name\": \"Delta Reporter\",\n    \"data\": {\n        \"url\": \"www.deltareporter.com\"\n    },\n    \"project_status_id\": 1\n}",
+					"raw": "{\n    \"name\": \"DoneDeal\",\n    \"project_status_id\": 1\n} ",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -48,12 +47,12 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:5001/api/v1/project",
+					"raw": "http://localhost:5000/api/v1/project",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -69,12 +68,12 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5001/api/v1/project/1",
+					"raw": "http://localhost:5000/api/v1/project/1",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -91,12 +90,12 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5001/api/v1/projects",
+					"raw": "http://localhost:5000/api/v1/projects",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -128,12 +127,12 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:5001/api/v1/launch",
+					"raw": "http://localhost:5000/api/v1/launch",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -149,12 +148,12 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5001/api/v1/launch/1",
+					"raw": "http://localhost:5000/api/v1/launch/1",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -171,12 +170,12 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5001/api/v1/launch/project/1",
+					"raw": "http://localhost:5000/api/v1/launch/project/1",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -189,21 +188,30 @@
 			"response": []
 		},
 		{
-			"name": "Get Launches",
+			"name": "Finish Launch",
 			"request": {
-				"method": "GET",
+				"method": "PUT",
 				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"launch_id\": 2\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
 				"url": {
-					"raw": "http://localhost:5001/api/v1/launches",
+					"raw": "http://localhost:5000/api/v1/finish_launch",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "5000",
 					"path": [
 						"api",
 						"v1",
-						"launches"
+						"finish_launch"
 					]
 				}
 			},
@@ -231,12 +239,12 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:5001/api/v1/test_run",
+					"raw": "http://localhost:5000/api/v1/test_run",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -252,17 +260,17 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5001/api/v1/test_run/3",
+					"raw": "http://localhost:5000/api/v1/test_run/1",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "5000",
 					"path": [
 						"api",
 						"v1",
 						"test_run",
-						"3"
+						"1"
 					]
 				}
 			},
@@ -274,39 +282,18 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5001/api/v1/test_run/launch/20",
+					"raw": "http://localhost:5000/api/v1/test_run/launch/1",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "5000",
 					"path": [
 						"api",
 						"v1",
 						"test_run",
 						"launch",
-						"20"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Get Test Runs",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:5001/api/v1/test_runs",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "5001",
-					"path": [
-						"api",
-						"v1",
-						"test_runs"
+						"1"
 					]
 				}
 			},
@@ -334,12 +321,12 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:5001/api/v1/test_suite",
+					"raw": "http://localhost:5000/api/v1/test_suite",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -355,12 +342,12 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5001/api/v1/test_suite/1",
+					"raw": "http://localhost:5000/api/v1/test_suite/1",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -377,12 +364,12 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5001/api/v1/tests_suite_history/test_run/1",
+					"raw": "http://localhost:5000/api/v1/tests_suite_history/test_run/1",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -400,41 +387,20 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5001/api/v1/tests_suite_history/test_status/3/test_run/1",
+					"raw": "http://localhost:5000/api/v1/tests_suite_history/test_status/1/test_run/1",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "5000",
 					"path": [
 						"api",
 						"v1",
 						"tests_suite_history",
 						"test_status",
-						"3",
+						"1",
 						"test_run",
 						"1"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Get Test Suites",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:5001/api/v1/test_suites",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "5001",
-					"path": [
-						"api",
-						"v1",
-						"test_suites"
 					]
 				}
 			},
@@ -462,12 +428,12 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:5001/api/v1/test",
+					"raw": "http://localhost:5000/api/v1/test",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -483,12 +449,12 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5001/api/v1/test/1",
+					"raw": "http://localhost:5000/api/v1/test/1",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -505,12 +471,12 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5001/api/v1/tests_history/test_status/1",
+					"raw": "http://localhost:5000/api/v1/tests_history/test_status/1",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -528,12 +494,12 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5001/api/v1/tests_history/test_status/1/test_run/2",
+					"raw": "http://localhost:5000/api/v1/tests_history/test_status/1/test_run/1",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -541,7 +507,7 @@
 						"test_status",
 						"1",
 						"test_run",
-						"2"
+						"1"
 					]
 				}
 			},
@@ -553,12 +519,12 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5001/api/v1/tests_history/test_resolution/1",
+					"raw": "http://localhost:5000/api/v1/tests_history/test_resolution/1",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -576,18 +542,18 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5001/api/v1/tests_history/test_suite/2",
+					"raw": "http://localhost:5000/api/v1/tests_history/test_suite/1",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "5000",
 					"path": [
 						"api",
 						"v1",
 						"tests_history",
 						"test_suite",
-						"2"
+						"1"
 					]
 				}
 			},
@@ -618,39 +584,48 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:5001/api/v1/tests_history/test_run/1",
+					"raw": "http://localhost:5000/api/v1/tests_history/test_run/5",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "5000",
 					"path": [
 						"api",
 						"v1",
 						"tests_history",
 						"test_run",
-						"1"
+						"5"
 					]
 				}
 			},
 			"response": []
 		},
 		{
-			"name": "Get Tests",
+			"name": "Update Test History Resolution",
 			"request": {
-				"method": "GET",
+				"method": "PUT",
 				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"test_history_id\": 2,\n\t\"test_resolution\": \"Working as expected\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
 				"url": {
-					"raw": "http://localhost:5001/api/v1/tests",
+					"raw": "http://localhost:5000/api/v1/test_history_resolution",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "5000",
 					"path": [
 						"api",
 						"v1",
-						"tests"
+						"test_history_resolution"
 					]
 				}
 			},
