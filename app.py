@@ -75,7 +75,7 @@ def get_projects():
         for project in projects:
             data.append(
                 {
-                    "id": project.id,
+                    "project_id": project.id,
                     "name": project.name,
                     "data": project.data,
                     "project_status": project.project_status.name,
@@ -98,7 +98,7 @@ def get_project(project_id):
 
     if result:
         data = {
-            "id": result.id,
+            "project_id": result.id,
             "name": result.name,
             "data": result.data,
             "project_status": result.project_status.name,
@@ -167,7 +167,7 @@ def get_launch(launch_id):
 
     if result:
         data = {
-            "id": result.id,
+            "launch_id": result.id,
             "name": result.name,
             "data": result.data,
             "project": result.project.name,
@@ -193,7 +193,8 @@ def get_launches_by_project_id(project_id):
         for launch in result:
             launches.append(
                 {
-                    "id": launch.id,
+                    "launch_id": launch.id,
+                    "project_id": launch.project.id,
                     "name": launch.name,
                     "data": launch.data,
                     "project": launch.project.name,
@@ -258,7 +259,7 @@ def get_test_run(test_run_id):
 
     if result:
         data = {
-            "id": result.id,
+            "test_run_id": result.id,
             "data": result.data,
             "start_datetime": result.start_datetime,
             "end_datetime": result.end_datetime,
@@ -287,7 +288,9 @@ def get_test_runs_by_launch_id(launch_id):
         for test_run in result:
             test_runs.append(
                 {
-                    "id": test_run.id,
+                    "test_run_id": test_run.id,
+                    "launch_id": test_run.launch.id,
+                    "project_id": test_run.launch.project.id,
                     "data": test_run.data,
                     "start_datetime": test_run.start_datetime,
                     "end_datetime": test_run.end_datetime,
@@ -413,7 +416,7 @@ def get_test_suite(test_suite_id):
 
     if result:
         data = {
-            "id": result.id,
+            "test_suite_id": result.id,
             "name": result.name,
             "data": result.data,
             "test_type": result.test_type,
@@ -585,7 +588,7 @@ def get_tests_suite_history_by_test_status_and_test_run_id(
             test_suite_history = table[1]
             test_suites_history.append(
                 {
-                    "id": test_suite_history.id,
+                    "test_suite_history_id": test_suite_history.id,
                     "test_suite_id": test_suite_history.test_suite.id,
                     "name": test_suite_history.test_suite.name,
                     "start_datetime": test_suite_history.start_datetime,
@@ -619,7 +622,9 @@ def get_tests_history_by_test_run(test_run_id):
         index = -1
 
         test_run = {
-            "id": results[0][0].id,
+            "test_run_id": results[0][0].id,
+            "launch_id": results[0][0].launch.id,
+            "project_id": results[0][0].launch.project.id,
             "launch": results[0][0].launch.name,
             "test_type": results[0][0].test_type,
             "start_datetime": results[0][0].start_datetime,
@@ -639,7 +644,7 @@ def get_tests_history_by_test_run(test_run_id):
                 test_suites_index[test_suite_history.id] = index
                 test_suites.append(
                     {
-                        "id": test_suite_history.id,
+                        "test_suite_history_id": test_suite_history.id,
                         "test_suite_id": test_suite_history.test_suite.id,
                         "name": test_suite_history.test_suite.name,
                         "start_datetime": test_suite_history.start_datetime,
@@ -654,7 +659,7 @@ def get_tests_history_by_test_run(test_run_id):
                 )
             test_suites[test_suites_index.get(test_suite_history.id)]["tests"].append(
                 {
-                    "id": test_history.id,
+                    "test_history_id": test_history.id,
                     "test_id": test_history.test.id,
                     "name": test_history.test.name,
                     "trace": test_history.trace,
@@ -689,7 +694,7 @@ def get_test_by_test_id(test_id):
 
     if result:
         data = {
-            "id": result.id,
+            "test_id": result.id,
             "name": result.name,
             "data": result.data,
             "test_suite_id": result.test_suite_id,
@@ -721,7 +726,7 @@ def get_tests_history_by_test_status_and_test_run_id(test_status_id, test_run_id
         for test_history in tests_history:
             data.append(
                 {
-                    "id": test_history.id,
+                    "test_history_id": test_history.id,
                     "name": test_history.test.name,
                     "start_datetime": test_history.start_datetime,
                     "end_datetime": test_history.end_datetime,
@@ -752,7 +757,7 @@ def get_tests_history_by_test_status_id(test_status_id):
         for test_history in tests_history:
             data.append(
                 {
-                    "id": test_history.id,
+                    "test_history_id": test_history.id,
                     "name": test_history.test.name,
                     "start_datetime": test_history.start_datetime,
                     "end_datetime": test_history.end_datetime,
@@ -785,7 +790,7 @@ def get_tests_history_by_test_resolution_id(test_resolution_id):
         for test_history in tests_history:
             data.append(
                 {
-                    "id": test_history.id,
+                    "test_history_id": test_history.id,
                     "name": test_history.test.name,
                     "start_datetime": test_history.start_datetime,
                     "end_datetime": test_history.end_datetime,
@@ -819,7 +824,7 @@ def get_tests_history_by_test_suite_id(test_suite_id):
             test_suite = table[2]
             data.append(
                 {
-                    "id": test_history.id,
+                    "test_history_id": test_history.id,
                     "name": test.name,
                     "start_datetime": test_history.start_datetime,
                     "end_datetime": test_history.end_datetime,
