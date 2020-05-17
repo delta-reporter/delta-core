@@ -735,6 +735,11 @@ def get_tests_history_by_test_status_and_test_run_id(test_status_id, test_run_id
                     ),
                     "test_status": test_history.test_status.name,
                     "test_resolution": test_history.test_resolution.name,
+                    "trace": test_history.trace,
+                    "file": test_history.file,
+                    "message": test_history.message,
+                    "error_type": test_history.error_type,
+                    "retries": test_history.retries
                 }
             )
     else:
