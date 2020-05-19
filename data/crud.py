@@ -3,6 +3,7 @@ from app import db
 from data import constants
 from logzero import logger
 from sqlalchemy import exc
+from sqlalchemy.sql import func
 
 
 def session_commit():
@@ -178,7 +179,11 @@ class Read:
     @staticmethod
     def launch_by_project_id(project_id):
         try:
-            launch = models.Launch.query.filter_by(project_id=project_id).order_by(models.Launch.id.desc()).all()
+            launch = (
+                models.Launch.query.filter_by(project_id=project_id)
+                .order_by(models.Launch.id.desc())
+                .all()
+            )
         except exc.SQLAlchemyError as e:
             logger.error(e)
             db.session.rollback()
@@ -199,8 +204,84 @@ class Read:
 
     @staticmethod
     def test_run_by_launch_id(launch_id):
+        total = (
+            db.session.query(
+                models.TestHistory.test_run_id, func.count("*").label("tests_count")
+            )
+            .group_by(models.TestHistory.test_run_id)
+            .subquery()
+        )
+
+        failed = (
+            db.session.query(
+                models.TestHistory.test_run_id,
+                func.count("*").label("failed_tests_count"),
+            )
+            .filter(models.TestHistory.test_status_id == 1)
+            .group_by(models.TestHistory.test_run_id)
+            .subquery()
+        )
+
+        passed = (
+            db.session.query(
+                models.TestHistory.test_run_id,
+                func.count("*").label("passed_tests_count"),
+            )
+            .filter(models.TestHistory.test_status_id == 2)
+            .group_by(models.TestHistory.test_run_id)
+            .subquery()
+        )
+
+        running = (
+            db.session.query(
+                models.TestHistory.test_run_id,
+                func.count("*").label("running_tests_count"),
+            )
+            .filter(models.TestHistory.test_status_id == 3)
+            .group_by(models.TestHistory.test_run_id)
+            .subquery()
+        )
+
+        incomplete = (
+            db.session.query(
+                models.TestHistory.test_run_id,
+                func.count("*").label("incomplete_tests_count"),
+            )
+            .filter(models.TestHistory.test_status_id == 4)
+            .group_by(models.TestHistory.test_run_id)
+            .subquery()
+        )
+
+        skipped = (
+            db.session.query(
+                models.TestHistory.test_run_id,
+                func.count("*").label("skipped_tests_count"),
+            )
+            .filter(models.TestHistory.test_status_id == 5)
+            .group_by(models.TestHistory.test_run_id)
+            .subquery()
+        )
+
         try:
-            test_run = models.TestRun.query.filter_by(launch_id=launch_id).all()
+            test_run = (
+                db.session.query(
+                    models.TestRun,
+                    total.c.tests_count,
+                    failed.c.failed_tests_count,
+                    passed.c.passed_tests_count,
+                    running.c.running_tests_count,
+                    incomplete.c.incomplete_tests_count,
+                    skipped.c.skipped_tests_count,
+                )
+                .outerjoin(total, models.TestRun.id == total.c.test_run_id)
+                .outerjoin(failed, models.TestRun.id == failed.c.test_run_id)
+                .outerjoin(passed, models.TestRun.id == passed.c.test_run_id)
+                .outerjoin(running, models.TestRun.id == running.c.test_run_id)
+                .outerjoin(incomplete, models.TestRun.id == incomplete.c.test_run_id)
+                .outerjoin(skipped, models.TestRun.id == skipped.c.test_run_id)
+                .filter(models.TestRun.launch_id == launch_id)
+                .order_by(models.TestRun.id)
+            )
         except exc.SQLAlchemyError as e:
             logger.error(e)
             db.session.rollback()
@@ -211,7 +292,10 @@ class Read:
     @staticmethod
     def test_runs_failed_by_launch_id(launch_id):
         try:
-            failed_runs = models.TestRun.query.filter_by(launch_id=launch_id, test_run_status_id=constants.Constants.test_run_status["Failed"]).all()
+            failed_runs = models.TestRun.query.filter_by(
+                launch_id=launch_id,
+                test_run_status_id=constants.Constants.test_run_status["Failed"],
+            ).all()
         except exc.SQLAlchemyError as e:
             logger.error(e)
             db.session.rollback()
@@ -246,7 +330,7 @@ class Read:
     @staticmethod
     def test_by_name(test_name):
         try:
-            test =  models.Test.query.filter_by(name=test_name).first()
+            test = models.Test.query.filter_by(name=test_name).first()
         except exc.SQLAlchemyError as e:
             logger.error(e)
             db.session.rollback()
@@ -311,10 +395,12 @@ class Read:
                 )
                 .filter(models.TestRun.id == models.TestSuiteHistory.test_run_id)
                 .filter(
-                    models.TestSuiteHistory.test_run_id == models.TestHistory.test_run_id
+                    models.TestSuiteHistory.test_run_id
+                    == models.TestHistory.test_run_id
                 )
                 .filter(
-                    models.TestSuiteHistory.id == models.TestHistory.test_suite_history_id
+                    models.TestSuiteHistory.id
+                    == models.TestHistory.test_suite_history_id
                 )
                 .filter(models.TestRun.id == test_run_id)
                 .all()
@@ -342,7 +428,9 @@ class Read:
     @staticmethod
     def test_history_by_test_status_id(test_status_id):
         try:
-            test_history = models.TestHistory.query.filter_by(test_status_id=test_status_id).all()
+            test_history = models.TestHistory.query.filter_by(
+                test_status_id=test_status_id
+            ).all()
         except exc.SQLAlchemyError as e:
             logger.error(e)
             db.session.rollback()
@@ -409,7 +497,9 @@ class Update:
     @staticmethod
     def update_test_history_resolution(test_history_id, test_resolution):
         test_history = db.session.query(models.TestHistory).get(test_history_id)
-        test_history.test_resolution_id = constants.Constants.test_resolution.get(test_resolution)
+        test_history.test_resolution_id = constants.Constants.test_resolution.get(
+            test_resolution
+        )
 
         session_commit()
 
@@ -448,9 +538,7 @@ class Update:
     @staticmethod
     def update_launch(launch_id, launch_status):
         launch = db.session.query(models.Launch).get(launch_id)
-        launch.launch_status_id = constants.Constants.launch_status.get(
-            launch_status
-        )
+        launch.launch_status_id = constants.Constants.launch_status.get(launch_status)
 
         session_commit()
 

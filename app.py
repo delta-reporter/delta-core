@@ -4,13 +4,12 @@ from dateutil.relativedelta import relativedelta
 from logzero import logger
 from flask import Flask, request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
+from data import crud
 
 app = Flask(__name__)
 app.config.from_object(os.environ["APP_SETTINGS"])
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
-
-from data import crud
 
 
 @app.route("/")
@@ -144,13 +143,9 @@ def finish_launch():
     failed_runs = crud.Read.test_runs_failed_by_launch_id(params.get("launch_id"))
 
     if failed_runs:
-        launch_id = crud.Update.update_launch(
-            params.get("launch_id"), "Failed"
-        )
+        launch_id = crud.Update.update_launch(params.get("launch_id"), "Failed")
     else:
-        launch_id = crud.Update.update_launch(
-            params.get("launch_id"), "Successful"
-        )
+        launch_id = crud.Update.update_launch(params.get("launch_id"), "Successful")
 
     data = {"message": "Launch updated successfully", "id": launch_id}
 
@@ -158,6 +153,7 @@ def finish_launch():
     resp.status_code = 200
 
     return resp
+
 
 @app.route("/api/v1/launch/<int:launch_id>", methods=["GET"])
 def get_launch(launch_id):
@@ -285,7 +281,15 @@ def get_test_runs_by_launch_id(launch_id):
 
     if result:
         test_runs = []
-        for test_run in result:
+        for (
+            test_run,
+            total_count,
+            failed_count,
+            passed_count,
+            running_count,
+            incomplete_count,
+            skipped_count,
+        ) in result:
             test_runs.append(
                 {
                     "test_run_id": test_run.id,
@@ -301,6 +305,12 @@ def get_test_runs_by_launch_id(launch_id):
                     "test_run_status": test_run.test_run_status.name,
                     "launch_name": test_run.launch.name,
                     "launch_status": test_run.launch.launch_status.name,
+                    "tests_total": total_count if total_count else 0,
+                    "tests_failed": failed_count if failed_count else 0,
+                    "tests_passed": passed_count if passed_count else 0,
+                    "tests_running": running_count if running_count else 0,
+                    "tests_incomplete": incomplete_count if incomplete_count else 0,
+                    "tests_skipped": skipped_count if skipped_count else 0,
                 }
             )
         data = test_runs
@@ -512,14 +522,14 @@ def update_test_history():
 
     return resp
 
+
 @app.route("/api/v1/test_history_resolution", methods=["PUT"])
 def update_test_history_resolution():
     params = request.get_json(force=True)
     logger.info("/update_test_history_resolution/%s", params)
 
     crud.Update.update_test_history_resolution(
-        params.get("test_history_id"),
-        params.get("test_resolution")
+        params.get("test_history_id"), params.get("test_resolution")
     )
 
     data = {"message": "Test history resolution updated successfully"}
@@ -617,7 +627,6 @@ def get_tests_history_by_test_run(test_run_id):
 
     if results:
         test_suites = []
-        tests = []
         test_suites_index = {}
         index = -1
 
@@ -739,7 +748,7 @@ def get_tests_history_by_test_status_and_test_run_id(test_status_id, test_run_id
                     "file": test_history.file,
                     "message": test_history.message,
                     "error_type": test_history.error_type,
-                    "retries": test_history.retries
+                    "retries": test_history.retries,
                 }
             )
     else:
