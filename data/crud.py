@@ -4,6 +4,7 @@ from data import constants
 from logzero import logger
 from sqlalchemy import exc
 from sqlalchemy.sql import func
+from data.subqueries import TestCounts
 
 
 def session_commit():
@@ -179,82 +180,50 @@ class Read:
     @staticmethod
     def launch_by_project_id(project_id):
 
-        total = (
-            db.session.query(
-                models.TestHistory.test_run_id, func.count("*").label("tests_count")
-            )
-            .group_by(models.TestHistory.test_run_id)
-            .subquery()
-        )
-
-        failed = (
-            db.session.query(
-                models.TestHistory.test_run_id,
-                func.count("*").label("failed_tests_count"),
-            )
-            .filter(models.TestHistory.test_status_id == 1)
-            .group_by(models.TestHistory.test_run_id)
-            .subquery()
-        )
-
-        passed = (
-            db.session.query(
-                models.TestHistory.test_run_id,
-                func.count("*").label("passed_tests_count"),
-            )
-            .filter(models.TestHistory.test_status_id == 2)
-            .group_by(models.TestHistory.test_run_id)
-            .subquery()
-        )
-
-        running = (
-            db.session.query(
-                models.TestHistory.test_run_id,
-                func.count("*").label("running_tests_count"),
-            )
-            .filter(models.TestHistory.test_status_id == 3)
-            .group_by(models.TestHistory.test_run_id)
-            .subquery()
-        )
-
-        incomplete = (
-            db.session.query(
-                models.TestHistory.test_run_id,
-                func.count("*").label("incomplete_tests_count"),
-            )
-            .filter(models.TestHistory.test_status_id == 4)
-            .group_by(models.TestHistory.test_run_id)
-            .subquery()
-        )
-
-        skipped = (
-            db.session.query(
-                models.TestHistory.test_run_id,
-                func.count("*").label("skipped_tests_count"),
-            )
-            .filter(models.TestHistory.test_status_id == 5)
-            .group_by(models.TestHistory.test_run_id)
-            .subquery()
-        )
+        t_counts = TestCounts()
 
         try:
             launch = (
                 db.session.query(
                     models.Launch,
                     models.TestRun,
-                    total.c.tests_count,
-                    failed.c.failed_tests_count,
-                    passed.c.passed_tests_count,
-                    running.c.running_tests_count,
-                    incomplete.c.incomplete_tests_count,
-                    skipped.c.skipped_tests_count,
+                    t_counts.total_tests_by_test_run_id.c.tests_count,
+                    t_counts.failed_tests_by_test_run_id.c.failed_tests_count,
+                    t_counts.passed_tests_by_test_run_id.c.passed_tests_count,
+                    t_counts.running_tests_by_test_run_id.c.running_tests_count,
+                    t_counts.incomplete_tests_by_test_run_id.c.incomplete_tests_count,
+                    t_counts.skipped_tests_by_test_run_id.c.skipped_tests_count,
                 )
-                .outerjoin(total, models.TestRun.id == total.c.test_run_id)
-                .outerjoin(failed, models.TestRun.id == failed.c.test_run_id)
-                .outerjoin(passed, models.TestRun.id == passed.c.test_run_id)
-                .outerjoin(running, models.TestRun.id == running.c.test_run_id)
-                .outerjoin(incomplete, models.TestRun.id == incomplete.c.test_run_id)
-                .outerjoin(skipped, models.TestRun.id == skipped.c.test_run_id)
+                .outerjoin(
+                    t_counts.total_tests_by_test_run_id,
+                    models.TestRun.id
+                    == t_counts.total_tests_by_test_run_id.c.test_run_id,
+                )
+                .outerjoin(
+                    t_counts.failed_tests_by_test_run_id,
+                    models.TestRun.id
+                    == t_counts.failed_tests_by_test_run_id.c.test_run_id,
+                )
+                .outerjoin(
+                    t_counts.passed_tests_by_test_run_id,
+                    models.TestRun.id
+                    == t_counts.passed_tests_by_test_run_id.c.test_run_id,
+                )
+                .outerjoin(
+                    t_counts.running_tests_by_test_run_id,
+                    models.TestRun.id
+                    == t_counts.running_tests_by_test_run_id.c.test_run_id,
+                )
+                .outerjoin(
+                    t_counts.incomplete_tests_by_test_run_id,
+                    models.TestRun.id
+                    == t_counts.incomplete_tests_by_test_run_id.c.test_run_id,
+                )
+                .outerjoin(
+                    t_counts.skipped_tests_by_test_run_id,
+                    models.TestRun.id
+                    == t_counts.skipped_tests_by_test_run_id.c.test_run_id,
+                )
                 .filter(models.TestRun.launch_id == models.Launch.id)
                 .filter(models.Launch.project_id == project_id)
                 .order_by(models.Launch.id.desc())
@@ -280,81 +249,50 @@ class Read:
 
     @staticmethod
     def test_run_by_launch_id(launch_id):
-        total = (
-            db.session.query(
-                models.TestHistory.test_run_id, func.count("*").label("tests_count")
-            )
-            .group_by(models.TestHistory.test_run_id)
-            .subquery()
-        )
 
-        failed = (
-            db.session.query(
-                models.TestHistory.test_run_id,
-                func.count("*").label("failed_tests_count"),
-            )
-            .filter(models.TestHistory.test_status_id == 1)
-            .group_by(models.TestHistory.test_run_id)
-            .subquery()
-        )
-
-        passed = (
-            db.session.query(
-                models.TestHistory.test_run_id,
-                func.count("*").label("passed_tests_count"),
-            )
-            .filter(models.TestHistory.test_status_id == 2)
-            .group_by(models.TestHistory.test_run_id)
-            .subquery()
-        )
-
-        running = (
-            db.session.query(
-                models.TestHistory.test_run_id,
-                func.count("*").label("running_tests_count"),
-            )
-            .filter(models.TestHistory.test_status_id == 3)
-            .group_by(models.TestHistory.test_run_id)
-            .subquery()
-        )
-
-        incomplete = (
-            db.session.query(
-                models.TestHistory.test_run_id,
-                func.count("*").label("incomplete_tests_count"),
-            )
-            .filter(models.TestHistory.test_status_id == 4)
-            .group_by(models.TestHistory.test_run_id)
-            .subquery()
-        )
-
-        skipped = (
-            db.session.query(
-                models.TestHistory.test_run_id,
-                func.count("*").label("skipped_tests_count"),
-            )
-            .filter(models.TestHistory.test_status_id == 5)
-            .group_by(models.TestHistory.test_run_id)
-            .subquery()
-        )
+        t_counts = TestCounts()
 
         try:
             test_run = (
                 db.session.query(
                     models.TestRun,
-                    total.c.tests_count,
-                    failed.c.failed_tests_count,
-                    passed.c.passed_tests_count,
-                    running.c.running_tests_count,
-                    incomplete.c.incomplete_tests_count,
-                    skipped.c.skipped_tests_count,
+                    t_counts.total_tests_by_test_run_id.c.tests_count,
+                    t_counts.failed_tests_by_test_run_id.c.failed_tests_count,
+                    t_counts.passed_tests_by_test_run_id.c.passed_tests_count,
+                    t_counts.running_tests_by_test_run_id.c.running_tests_count,
+                    t_counts.incomplete_tests_by_test_run_id.c.incomplete_tests_count,
+                    t_counts.skipped_tests_by_test_run_id.c.skipped_tests_count,
                 )
-                .outerjoin(total, models.TestRun.id == total.c.test_run_id)
-                .outerjoin(failed, models.TestRun.id == failed.c.test_run_id)
-                .outerjoin(passed, models.TestRun.id == passed.c.test_run_id)
-                .outerjoin(running, models.TestRun.id == running.c.test_run_id)
-                .outerjoin(incomplete, models.TestRun.id == incomplete.c.test_run_id)
-                .outerjoin(skipped, models.TestRun.id == skipped.c.test_run_id)
+                .outerjoin(
+                    t_counts.total_tests_by_test_run_id,
+                    models.TestRun.id
+                    == t_counts.total_tests_by_test_run_id.c.test_run_id,
+                )
+                .outerjoin(
+                    t_counts.failed_tests_by_test_run_id,
+                    models.TestRun.id
+                    == t_counts.failed_tests_by_test_run_id.c.test_run_id,
+                )
+                .outerjoin(
+                    t_counts.passed_tests_by_test_run_id,
+                    models.TestRun.id
+                    == t_counts.passed_tests_by_test_run_id.c.test_run_id,
+                )
+                .outerjoin(
+                    t_counts.running_tests_by_test_run_id,
+                    models.TestRun.id
+                    == t_counts.running_tests_by_test_run_id.c.test_run_id,
+                )
+                .outerjoin(
+                    t_counts.incomplete_tests_by_test_run_id,
+                    models.TestRun.id
+                    == t_counts.incomplete_tests_by_test_run_id.c.test_run_id,
+                )
+                .outerjoin(
+                    t_counts.skipped_tests_by_test_run_id,
+                    models.TestRun.id
+                    == t_counts.skipped_tests_by_test_run_id.c.test_run_id,
+                )
                 .filter(models.TestRun.launch_id == launch_id)
                 .order_by(models.TestRun.id)
             )
@@ -465,64 +403,7 @@ class Read:
     @staticmethod
     def test_history_by_test_run(test_run_id):
 
-        total = (
-            db.session.query(
-                models.TestHistory.test_suite_history_id,
-                func.count("*").label("tests_count"),
-            )
-            .group_by(models.TestHistory.test_suite_history_id)
-            .subquery()
-        )
-
-        failed = (
-            db.session.query(
-                models.TestHistory.test_suite_history_id,
-                func.count("*").label("failed_tests_count"),
-            )
-            .filter(models.TestHistory.test_status_id == 1)
-            .group_by(models.TestHistory.test_suite_history_id)
-            .subquery()
-        )
-
-        passed = (
-            db.session.query(
-                models.TestHistory.test_suite_history_id,
-                func.count("*").label("passed_tests_count"),
-            )
-            .filter(models.TestHistory.test_status_id == 2)
-            .group_by(models.TestHistory.test_suite_history_id)
-            .subquery()
-        )
-
-        running = (
-            db.session.query(
-                models.TestHistory.test_suite_history_id,
-                func.count("*").label("running_tests_count"),
-            )
-            .filter(models.TestHistory.test_status_id == 3)
-            .group_by(models.TestHistory.test_suite_history_id)
-            .subquery()
-        )
-
-        incomplete = (
-            db.session.query(
-                models.TestHistory.test_suite_history_id,
-                func.count("*").label("incomplete_tests_count"),
-            )
-            .filter(models.TestHistory.test_status_id == 4)
-            .group_by(models.TestHistory.test_suite_history_id)
-            .subquery()
-        )
-
-        skipped = (
-            db.session.query(
-                models.TestHistory.test_suite_history_id,
-                func.count("*").label("skipped_tests_count"),
-            )
-            .filter(models.TestHistory.test_status_id == 5)
-            .group_by(models.TestHistory.test_suite_history_id)
-            .subquery()
-        )
+        t_counts = TestCounts()
 
         try:
             test_history = (
@@ -530,33 +411,42 @@ class Read:
                     models.TestRun,
                     models.TestSuiteHistory,
                     models.TestHistory,
-                    total.c.tests_count,
-                    failed.c.failed_tests_count,
-                    passed.c.passed_tests_count,
-                    running.c.running_tests_count,
-                    incomplete.c.incomplete_tests_count,
-                    skipped.c.skipped_tests_count,
+                    t_counts.total_tests_by_test_suite_history_id.c.tests_count,
+                    t_counts.failed_tests_by_test_suite_history_id.c.failed_tests_count,
+                    t_counts.passed_tests_by_test_suite_history_id.c.passed_tests_count,
+                    t_counts.running_tests_by_test_suite_history_id.c.running_tests_count,
+                    t_counts.incomplete_tests_by_test_suite_history_id.c.incomplete_tests_count,
+                    t_counts.skipped_tests_by_test_suite_history_id.c.skipped_tests_count,
                 )
                 .outerjoin(
-                    total, models.TestSuiteHistory.id == total.c.test_suite_history_id
+                    t_counts.total_tests_by_test_suite_history_id,
+                    models.TestSuiteHistory.id
+                    == t_counts.total_tests_by_test_suite_history_id.c.test_suite_history_id,
                 )
                 .outerjoin(
-                    failed, models.TestSuiteHistory.id == failed.c.test_suite_history_id
+                    t_counts.failed_tests_by_test_suite_history_id,
+                    models.TestSuiteHistory.id
+                    == t_counts.failed_tests_by_test_suite_history_id.c.test_suite_history_id,
                 )
                 .outerjoin(
-                    passed, models.TestSuiteHistory.id == passed.c.test_suite_history_id
+                    t_counts.passed_tests_by_test_suite_history_id,
+                    models.TestSuiteHistory.id
+                    == t_counts.passed_tests_by_test_suite_history_id.c.test_suite_history_id,
                 )
                 .outerjoin(
-                    running,
-                    models.TestSuiteHistory.id == running.c.test_suite_history_id,
+                    t_counts.running_tests_by_test_suite_history_id,
+                    models.TestSuiteHistory.id
+                    == t_counts.running_tests_by_test_suite_history_id.c.test_suite_history_id,
                 )
                 .outerjoin(
-                    incomplete,
-                    models.TestSuiteHistory.id == incomplete.c.test_suite_history_id,
+                    t_counts.incomplete_tests_by_test_suite_history_id,
+                    models.TestSuiteHistory.id
+                    == t_counts.incomplete_tests_by_test_suite_history_id.c.test_suite_history_id,
                 )
                 .outerjoin(
-                    skipped,
-                    models.TestSuiteHistory.id == skipped.c.test_suite_history_id,
+                    t_counts.skipped_tests_by_test_suite_history_id,
+                    models.TestSuiteHistory.id
+                    == t_counts.skipped_tests_by_test_suite_history_id.c.test_suite_history_id,
                 )
                 .filter(models.TestRun.id == models.TestSuiteHistory.test_run_id)
                 .filter(
