@@ -188,7 +188,16 @@ def get_launches_by_project_id(project_id):
 
     if result:
         launches = []
-        for launch in result:
+        for (
+            launch,
+            test_run,
+            total_count,
+            failed_count,
+            passed_count,
+            running_count,
+            incomplete_count,
+            skipped_count,
+        ) in result:
             launches.append(
                 {
                     "launch_id": launch.id,
@@ -197,6 +206,20 @@ def get_launches_by_project_id(project_id):
                     "data": launch.data,
                     "project": launch.project.name,
                     "launch_status": launch.launch_status.name,
+                    "test_run_stats": [
+                        {
+                            "test_run_id": test_run.id,
+                            "test_type": test_run.test_type,
+                            "tests_total": total_count if total_count else 0,
+                            "tests_failed": failed_count if failed_count else 0,
+                            "tests_passed": passed_count if passed_count else 0,
+                            "tests_running": running_count if running_count else 0,
+                            "tests_incomplete": incomplete_count
+                            if incomplete_count
+                            else 0,
+                            "tests_skipped": skipped_count if skipped_count else 0,
+                        }
+                    ],
                 }
             )
         data = launches
@@ -648,6 +671,12 @@ def get_tests_history_by_test_run(test_run_id):
         for table in results:
             test_suite_history = table[1]
             test_history = table[2]
+            total_count = table[3]
+            failed_count = table[4]
+            passed_count = table[5]
+            running_count = table[6]
+            incomplete_count = table[7]
+            skipped_count = table[8]
             if test_suites == [] or test_suite_history.id not in list(
                 test_suites_index.keys()
             ):
@@ -665,6 +694,12 @@ def get_tests_history_by_test_run(test_run_id):
                             test_suite_history.end_datetime,
                         ),
                         "test_suite_status": test_suite_history.test_suite_status.name,
+                        "tests_total": total_count if total_count else 0,
+                        "tests_failed": failed_count if failed_count else 0,
+                        "tests_passed": passed_count if passed_count else 0,
+                        "tests_running": running_count if running_count else 0,
+                        "tests_incomplete": incomplete_count if incomplete_count else 0,
+                        "tests_skipped": skipped_count if skipped_count else 0,
                         "tests": [],
                     }
                 )
