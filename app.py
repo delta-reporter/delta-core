@@ -188,6 +188,8 @@ def get_launches_by_project_id(project_id):
 
     if result:
         launches = []
+        index = -1
+        launches_index = {}
         for (
             launch,
             test_run,
@@ -198,28 +200,30 @@ def get_launches_by_project_id(project_id):
             incomplete_count,
             skipped_count,
         ) in result:
-            launches.append(
+            if launches == [] or launch.id not in list(launches_index.keys()):
+                index = index + 1
+                launches_index[launch.id] = index
+                launches.append(
+                    {
+                        "launch_id": launch.id,
+                        "project_id": launch.project.id,
+                        "name": launch.name,
+                        "data": launch.data,
+                        "project": launch.project.name,
+                        "launch_status": launch.launch_status.name,
+                        "test_run_stats": [],
+                    }
+                )
+            launches[launches_index[launch.id]]["test_run_stats"].append(
                 {
-                    "launch_id": launch.id,
-                    "project_id": launch.project.id,
-                    "name": launch.name,
-                    "data": launch.data,
-                    "project": launch.project.name,
-                    "launch_status": launch.launch_status.name,
-                    "test_run_stats": [
-                        {
-                            "test_run_id": test_run.id,
-                            "test_type": test_run.test_type,
-                            "tests_total": total_count if total_count else 0,
-                            "tests_failed": failed_count if failed_count else 0,
-                            "tests_passed": passed_count if passed_count else 0,
-                            "tests_running": running_count if running_count else 0,
-                            "tests_incomplete": incomplete_count
-                            if incomplete_count
-                            else 0,
-                            "tests_skipped": skipped_count if skipped_count else 0,
-                        }
-                    ],
+                    "test_run_id": test_run.id,
+                    "test_type": test_run.test_type,
+                    "tests_total": total_count if total_count else 0,
+                    "tests_failed": failed_count if failed_count else 0,
+                    "tests_passed": passed_count if passed_count else 0,
+                    "tests_running": running_count if running_count else 0,
+                    "tests_incomplete": incomplete_count if incomplete_count else 0,
+                    "tests_skipped": skipped_count if skipped_count else 0,
                 }
             )
         data = launches
