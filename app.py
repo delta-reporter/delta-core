@@ -514,6 +514,7 @@ def create_test_history():
         test_id,
         params.get("test_run_id"),
         params.get("test_suite_history_id"),
+        params.get("parameters"),
     )
 
     data = {
@@ -724,6 +725,7 @@ def get_tests_history_by_test_run(test_run_id):
                     ),
                     "status": test_history.test_status.name,
                     "resolution": test_history.test_resolution.name,
+                    "parameters": test_history.parameters,
                 }
             )
         test_run["test_suites"] = test_suites
@@ -790,6 +792,7 @@ def get_tests_history_by_test_status_and_test_run_id(test_status_id, test_run_id
                     "message": test_history.message,
                     "error_type": test_history.error_type,
                     "retries": test_history.retries,
+                    "parameters": test_history.parameters,
                 }
             )
     else:

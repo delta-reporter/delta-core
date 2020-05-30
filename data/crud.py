@@ -116,7 +116,7 @@ class Create:
 
     @staticmethod
     def create_test_history(
-        start_datetime, test_id, test_run_id, test_suite_history_id
+        start_datetime, test_id, test_run_id, test_suite_history_id, parameters
     ):
         test_history = models.TestHistory(
             start_datetime=start_datetime,
@@ -125,6 +125,7 @@ class Create:
             test_resolution_id=constants.Constants.test_resolution["Not set"],
             test_run_id=test_run_id,
             test_suite_history_id=test_suite_history_id,
+            parameters=parameters,
         )
         db.session.add(test_history)
         session_commit()
