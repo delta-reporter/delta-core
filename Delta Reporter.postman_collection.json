@@ -602,6 +602,47 @@
 			"response": []
 		},
 		{
+			"name": "Get Test Retries by Test History ID",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5000/api/v1/tests_retries/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"v1",
+						"tests_retries",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Update Test History Resolution",
 			"request": {
 				"method": "PUT",
