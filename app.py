@@ -474,7 +474,6 @@ def create_test():
     params = request.get_json(force=True)
     logger.info("/create_test/%s", params)
 
-    # TODO(Juan) Check this condition for new tests.
     test_check = crud.Read.test_by_name(params.get("name"))
 
     if not test_check:
@@ -499,7 +498,6 @@ def create_test_history():
     params = request.get_json(force=True)
     logger.info("/create_test_history/%s", params)
 
-    # TODO(Juan) Check this condition for new tests.
     test_check = crud.Read.test_by_name(params.get("name"))
 
     if not test_check:
@@ -509,16 +507,34 @@ def create_test_history():
     else:
         test_id = test_check.id
 
-    test_history_id = crud.Create.create_test_history(
-        params.get("start_datetime"),
-        test_id,
-        params.get("test_run_id"),
-        params.get("test_suite_history_id"),
-        params.get("parameters"),
+    message = "New test history added successfully"
+    test_history_check = crud.Read.test_history_by_test_id_and_test_run_id(
+        test_id, params.get("test_run_id")
     )
+    if not test_history_check:
+        test_history_id = crud.Create.create_test_history(
+            params.get("start_datetime"),
+            test_id,
+            params.get("test_run_id"),
+            params.get("test_suite_history_id"),
+            params.get("parameters"),
+        )
+    else:
+        test_history_id = test_history_check.id
+        retries = crud.Update.increase_test_history_retry(test_history_check.id)
+        crud.Create.create_test_retry(
+            test_history_check.id,
+            retries,
+            test_history_check.start_datetime,
+            test_history_check.end_datetime,
+            test_history_check.trace,
+            test_history_check.message,
+            test_history_check.error_type,
+        )
+        message = "New test retry added successfully"
 
     data = {
-        "message": "New test history added successfully",
+        "message": message,
         "test_history_id": test_history_id,
         "test_id": test_id,
     }
@@ -541,7 +557,6 @@ def update_test_history():
         params.get("file"),
         params.get("message"),
         params.get("error_type"),
-        params.get("retries"),
         params.get("test_status"),
     )
 
@@ -897,6 +912,39 @@ def get_tests_history_by_test_suite_id(test_suite_id):
             )
     else:
         data = {"message": "No tests were found"}
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
+
+@app.route("/api/v1/tests_retries/<int:test_history_id>", methods=["GET"])
+def get_test_retries_by_test_history_id(test_history_id):
+    logger.info("/test_retries_by_test_history_id/%i", test_history_id)
+
+    results = crud.Read.test_retries_by_test_history_id(test_history_id)
+
+    if results:
+        data = []
+        for test_retry in results:
+            data.append(
+                {
+                    "id": test_retry.id,
+                    "test_history_id": test_retry.test_history_id,
+                    "start_datetime": test_retry.start_datetime,
+                    "end_datetime": test_retry.end_datetime,
+                    "duration": diff_dates(
+                        test_retry.start_datetime, test_retry.end_datetime
+                    ),
+                    "retry_count": test_retry.retry_count,
+                    "trace": test_retry.trace,
+                    "message": test_retry.message,
+                    "error_type": test_retry.error_type,
+                }
+            )
+    else:
+        data = {"message": "No test retries were found"}
 
     resp = jsonify(data)
     resp.status_code = 200

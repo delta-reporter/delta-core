@@ -204,6 +204,24 @@ class TestResolution(db.Model):
         return "<TestResolution {}>".format(self.name)
 
 
+class TestRetries(db.Model):
+    __tablename__ = "test_retries"
+
+    id = db.Column(db.Integer, primary_key=True)
+    test_history_id = db.Column(
+        db.Integer, db.ForeignKey("test_history.id"), nullable=False
+    )
+    retry_count = db.Column(db.Integer)
+    start_datetime = db.Column(db.DateTime)
+    end_datetime = db.Column(db.DateTime)
+    trace = db.Column(db.String)
+    message = db.Column(db.String(2000))
+    error_type = db.Column(db.String(2000))
+
+    def __repr__(self):
+        return "<TestRetries {}>".format(self.id)
+
+
 # TODO:
 #   All these event are actually not executed
 #   Will need to check for a better way to

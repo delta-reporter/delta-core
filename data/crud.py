@@ -132,6 +132,30 @@ class Create:
 
         return test_history.id
 
+    @staticmethod
+    def create_test_retry(
+        test_history_id,
+        retry_count,
+        start_datetime,
+        end_datetime,
+        trace,
+        message,
+        error_type,
+    ):
+        test_retry = models.TestRetries(
+            test_history_id=test_history_id,
+            retry_count=retry_count,
+            start_datetime=start_datetime,
+            end_datetime=end_datetime,
+            trace=trace,
+            message=message,
+            error_type=error_type,
+        )
+        db.session.add(test_retry)
+        session_commit()
+
+        return test_retry.id
+
 
 class Read:
     @staticmethod
@@ -402,6 +426,19 @@ class Read:
         return test_suite_history
 
     @staticmethod
+    def test_history_by_test_id_and_test_run_id(test_id, test_run_id):
+        try:
+            test_history = models.TestHistory.query.filter_by(
+                test_id=test_id, test_run_id=test_run_id
+            ).first()
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            test_history = None
+
+        return test_history
+
+    @staticmethod
     def test_history_by_test_run(test_run_id):
 
         t_counts = TestCounts()
@@ -524,18 +561,24 @@ class Read:
 
         return test_history
 
+    @staticmethod
+    def test_retries_by_test_history_id(test_history_id):
+        try:
+            test_retries = models.TestRetries.query.filter_by(
+                test_history_id=test_history_id
+            ).all()
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            test_retries = None
+
+        return test_retries
+
 
 class Update:
     @staticmethod
     def update_test_history(
-        test_history_id,
-        end_datetime,
-        trace,
-        file,
-        message,
-        error_type,
-        retries,
-        test_status,
+        test_history_id, end_datetime, trace, file, message, error_type, test_status,
     ):
         test_history = db.session.query(models.TestHistory).get(test_history_id)
         test_history.end_datetime = end_datetime
@@ -543,12 +586,23 @@ class Update:
         test_history.file = file
         test_history.message = message
         test_history.error_type = error_type
-        test_history.retries = retries
         test_history.test_status_id = constants.Constants.test_status.get(test_status)
 
         session_commit()
 
         return test_history.id
+
+    @staticmethod
+    def increase_test_history_retry(test_history_id):
+        test_history = db.session.query(models.TestHistory).get(test_history_id)
+
+        test_history.retries = (
+            0 if test_history.retries is None else test_history.retries + 1
+        )
+
+        session_commit()
+
+        return test_history.retries
 
     @staticmethod
     def update_test_history_resolution(test_history_id, test_resolution):
