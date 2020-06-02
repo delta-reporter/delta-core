@@ -160,6 +160,7 @@ class TestHistory(db.Model):
     message = db.Column(db.String(2000))
     error_type = db.Column(db.String(2000))
     retries = db.Column(db.Integer)
+    parameters = db.Column(db.String(3000))
     test_id = db.Column(db.Integer, db.ForeignKey("test.id"), nullable=False)
     test = db.relationship("Test", backref=db.backref("test", lazy=True))
     test_status_id = db.Column(
