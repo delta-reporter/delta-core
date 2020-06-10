@@ -156,6 +156,16 @@ class Create:
 
         return test_retry.id
 
+    @staticmethod
+    def store_file_into_test_history(test_history_id, name, type, file):
+        new_file = models.Media(
+            test_history_id=test_history_id, name=name, type=type, data=file
+        )
+        db.session.add(new_file)
+        session_commit()
+
+        return new_file.id
+
 
 class Read:
     @staticmethod
@@ -573,6 +583,18 @@ class Read:
             test_retries = None
 
         return test_retries
+
+    @staticmethod
+    def file_by_test_history_id(test_history_id):
+        try:
+            file_data = models.Media.query.filter_by(
+                test_history_id=test_history_id
+            ).first()
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+
+        return file_data
 
 
 class Update:

@@ -2,7 +2,8 @@ import os
 import datetime
 from dateutil.relativedelta import relativedelta
 from logzero import logger
-from flask import Flask, request, jsonify, render_template
+from io import BytesIO
+from flask import Flask, request, jsonify, render_template, send_file
 from flask_sqlalchemy import SQLAlchemy
 
 
@@ -950,6 +951,33 @@ def get_test_retries_by_test_history_id(test_history_id):
     resp.status_code = 200
 
     return resp
+
+
+@app.route("/api/v1/file_receptor/<int:test_history_id>", methods=["POST"])
+def receive_file_into_test_history_id(test_history_id):
+    logger.info("/receive_file_into_test_history_id/%i", test_history_id)
+    logger.info("/receive_file_into_test_history_id/%s", request)
+
+    file = request.files.get("file")
+    file_id = crud.Create.store_file_into_test_history(
+        test_history_id, file.filename, "image", file.read()
+    )
+
+    data = {"message": "File stored successfully", "file_id": file_id}
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
+
+@app.route("/api/v1/get_file/<int:test_history_id>", methods=["GET"])
+def get_file_by_test_history_id(test_history_id):
+    logger.info("/receive_file_into_test_history_id/%i", test_history_id)
+
+    file = crud.Read.file_by_test_history_id(test_history_id)
+
+    return send_file(BytesIO(file.data), attachment_filename="test.png")
 
 
 @app.errorhandler(404)

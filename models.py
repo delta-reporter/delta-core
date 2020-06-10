@@ -222,6 +222,19 @@ class TestRetries(db.Model):
         return "<TestRetries {}>".format(self.id)
 
 
+class Media(db.Model):
+    __tablename__ = "media"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(300))
+    type = db.Column(db.String(120))
+    data = db.Column(db.LargeBinary)
+    index = db.Column(db.Integer)
+    test_history_id = db.Column(
+        db.Integer, db.ForeignKey("test_history.id"), nullable=True
+    )
+
+
 # TODO:
 #   All these event are actually not executed
 #   Will need to check for a better way to
