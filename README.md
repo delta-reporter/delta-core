@@ -1,3 +1,5 @@
+[![Build Status](https://dev.azure.com/DeltaReporter/Delta%20Reporter/_apis/build/status/delta-reporter.delta-core?branchName=master)](https://dev.azure.com/DeltaReporter/Delta%20Reporter/_build/latest?definitionId=4&branchName=master)
+
 # Delta Reporter Core Service
 
 This service is intended to manage core data that are sent or displayed at Delta Reporter
