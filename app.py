@@ -789,27 +789,68 @@ def get_tests_history_by_test_status_and_test_run_id(test_status_id, test_run_id
     )
 
     if tests_history:
-        data = []
-        for test_history in tests_history:
-            data.append(
+        test_suites = []
+        test_suites_index = {}
+        index = -1
+        
+        test_run = {
+            "test_run_id": tests_history[0][0].id,
+            "launch_id": tests_history[0][0].launch.id,
+            "project_id": tests_history[0][0].launch.project.id,
+            "launch": tests_history[0][0].launch.name,
+            "test_type": tests_history[0][0].test_type,
+            "start_datetime": tests_history[0][0].start_datetime,
+            "end_datetime": tests_history[0][0].end_datetime,
+            "duration": diff_dates(
+                tests_history[0][0].start_datetime, tests_history[0][0].end_datetime
+            ),
+            "test_run_status": tests_history[0][0].test_run_status.name,
+        }
+        for table in tests_history:
+            test_suite_history = table[1]
+            test_history = table[2]
+            if test_suites == [] or test_suite_history.id not in list(
+                test_suites_index.keys()
+            ):
+                index = index + 1
+                test_suites_index[test_suite_history.id] = index
+                test_suites.append(
+                    {
+                        "test_suite_history_id": test_suite_history.id,
+                        "test_suite_id": test_suite_history.test_suite.id,
+                        "name": test_suite_history.test_suite.name,
+                        "start_datetime": test_suite_history.start_datetime,
+                        "end_datetime": test_suite_history.end_datetime,
+                        "duration": diff_dates(
+                            test_suite_history.start_datetime,
+                            test_suite_history.end_datetime,
+                        ),
+                        "test_suite_status": test_suite_history.test_suite_status.name,
+                        "tests": [],
+                    }
+                )
+            test_suites[test_suites_index.get(test_suite_history.id)]["tests"].append(
                 {
                     "test_history_id": test_history.id,
+                    "test_id": test_history.test.id,
                     "name": test_history.test.name,
-                    "start_datetime": test_history.start_datetime,
-                    "end_datetime": test_history.end_datetime,
-                    "duration": diff_dates(
-                        test_history.start_datetime, test_history.end_datetime
-                    ),
-                    "test_status": test_history.test_status.name,
-                    "test_resolution": test_history.test_resolution.name,
                     "trace": test_history.trace,
                     "file": test_history.file,
                     "message": test_history.message,
                     "error_type": test_history.error_type,
                     "retries": test_history.retries,
+                    "start_datetime": test_history.start_datetime,
+                    "end_datetime": test_history.end_datetime,
+                    "duration": diff_dates(
+                        test_history.start_datetime, test_history.end_datetime
+                    ),
+                    "status": test_history.test_status.name,
+                    "resolution": test_history.test_resolution.name,
                     "parameters": test_history.parameters,
                 }
             )
+        test_run["test_suites"] = test_suites
+        data = [test_run]
     else:
         data = {"message": "No tests were found"}
 

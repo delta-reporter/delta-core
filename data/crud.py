@@ -508,9 +508,15 @@ class Read:
     @staticmethod
     def test_history_by_test_status_and_test_run_id(test_status_id, test_run_id):
         try:
-            test_history = models.TestHistory.query.filter_by(
-                test_status_id=test_status_id, test_run_id=test_run_id
-            ).all()
+            test_history = (
+                db.session.query(models.TestRun, models.TestSuiteHistory, models.TestHistory)
+                .filter(models.TestRun.id == models.TestSuiteHistory.test_run_id)
+                .filter(models.TestSuiteHistory.test_run_id == models.TestHistory.test_run_id)
+                .filter(models.TestSuiteHistory.id  == models.TestHistory.test_suite_history_id)
+                .filter(models.TestRun.id == test_run_id)
+                .filter(models.TestHistory.test_status_id == test_status_id)
+                .all()
+            )
         except exc.SQLAlchemyError as e:
             logger.error(e)
             db.session.rollback()
