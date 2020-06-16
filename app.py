@@ -959,6 +959,7 @@ def receive_file_into_test_history_id(test_history_id):
     logger.info("/receive_file_into_test_history_id/%s", request)
 
     file = request.files.get("file")
+    logger.info("RECEIVED: %s", request.files)
     file_id = crud.Create.store_file_into_test_history(
         test_history_id, file.filename, "image", file.read()
     )
@@ -977,7 +978,7 @@ def get_file_by_test_history_id(test_history_id):
 
     file = crud.Read.file_by_test_history_id(test_history_id)
 
-    return send_file(BytesIO(file.data), attachment_filename="test.png")
+    return send_file(BytesIO(file.data), attachment_filename=file.name)
 
 
 @app.errorhandler(404)
