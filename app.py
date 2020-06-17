@@ -524,13 +524,14 @@ def create_test_history():
         test_history_id = test_history_check.id
         retries = crud.Update.increase_test_history_retry(test_history_check.id)
         crud.Create.create_test_retry(
-            test_history_check.id,
-            retries,
-            test_history_check.start_datetime,
-            test_history_check.end_datetime,
-            test_history_check.trace,
-            test_history_check.message,
-            test_history_check.error_type,
+            test_history_id=test_history_check.id,
+            retry_count=retries,
+            start_datetime=test_history_check.start_datetime,
+            end_datetime=test_history_check.end_datetime,
+            trace=test_history_check.trace,
+            message=test_history_check.message,
+            error_type=test_history_check.error_type,
+            media=test_history_check.media,
         )
         message = "New test retry added successfully"
 
@@ -742,6 +743,7 @@ def get_tests_history_by_test_run(test_run_id):
                     "status": test_history.test_status.name,
                     "resolution": test_history.test_resolution.name,
                     "parameters": test_history.parameters,
+                    "media": test_history.media,
                 }
             )
         test_run["test_suites"] = test_suites
@@ -942,6 +944,7 @@ def get_test_retries_by_test_history_id(test_history_id):
                     "trace": test_retry.trace,
                     "message": test_retry.message,
                     "error_type": test_retry.error_type,
+                    "media": test_retry.media,
                 }
             )
     else:
@@ -953,15 +956,16 @@ def get_test_retries_by_test_history_id(test_history_id):
     return resp
 
 
-@app.route("/api/v1/file_receptor/<int:test_history_id>", methods=["POST"])
-def receive_file_into_test_history_id(test_history_id):
-    logger.info("/receive_file_into_test_history_id/%i", test_history_id)
-    logger.info("/receive_file_into_test_history_id/%s", request)
+@app.route("/api/v1/file_receptor_test_history/<int:test_history_id>", methods=["POST"])
+def receive_file_for_test_history(test_history_id):
+    logger.info("/receive_file_for_test_history/%i", test_history_id)
 
     file = request.files.get("file")
-    logger.info("RECEIVED: %s", request.files)
-    file_id = crud.Create.store_file_into_test_history(
-        test_history_id, file.filename, "image", file.read()
+    type = request.form.get("type")
+    file_id = crud.Create.store_media_file(file.filename, type, file.read())
+
+    crud.Update.add_media_to_test_history(
+        test_history_id, {"file_id": file_id, "filename": file.filename, "type": type}
     )
 
     data = {"message": "File stored successfully", "file_id": file_id}
@@ -972,11 +976,11 @@ def receive_file_into_test_history_id(test_history_id):
     return resp
 
 
-@app.route("/api/v1/get_file/<int:test_history_id>", methods=["GET"])
-def get_file_by_test_history_id(test_history_id):
-    logger.info("/receive_file_into_test_history_id/%i", test_history_id)
+@app.route("/api/v1/get_file/<int:media_id>", methods=["GET"])
+def get_file_by_media_id(media_id):
+    logger.info("/get_file_by_media_id/%i", media_id)
 
-    file = crud.Read.file_by_test_history_id(test_history_id)
+    file = crud.Read.file_by_media_id(media_id)
 
     return send_file(BytesIO(file.data), attachment_filename=file.name)
 

@@ -1,6 +1,7 @@
 from app import db
 from sqlalchemy import event
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.mutable import MutableList, MutableDict
 
 Base = declarative_base()
 
@@ -10,7 +11,7 @@ class Project(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
-    data = db.Column(db.JSON)
+    data = db.Column(MutableDict.as_mutable(db.JSON))
     project_status_id = db.Column(
         db.Integer, db.ForeignKey("project_status.id"), nullable=False
     )
@@ -37,7 +38,7 @@ class Launch(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
-    data = db.Column(db.JSON)
+    data = db.Column(MutableDict.as_mutable(db.JSON))
     launch_status_id = db.Column(
         db.Integer, db.ForeignKey("launch_status.id"), nullable=False
     )
@@ -65,7 +66,7 @@ class TestRun(db.Model):
     __tablename__ = "test_run"
 
     id = db.Column(db.Integer, primary_key=True)
-    data = db.Column(db.JSON)
+    data = db.Column(MutableDict.as_mutable(db.JSON))
     start_datetime = db.Column(db.DateTime)
     end_datetime = db.Column(db.DateTime)
     test_type = db.Column(db.String(100), nullable=False)
@@ -97,7 +98,7 @@ class TestSuite(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    data = db.Column(db.JSON)
+    data = db.Column(MutableDict.as_mutable(db.JSON))
     test_type = db.Column(db.String(50), nullable=False)
     project_id = db.Column(db.Integer, db.ForeignKey("project.id"), nullable=False)
 
@@ -106,7 +107,7 @@ class TestSuiteHistory(db.Model):
     __tablename__ = "test_suite_history"
 
     id = db.Column(db.Integer, primary_key=True)
-    data = db.Column(db.JSON)
+    data = db.Column(MutableDict.as_mutable(db.JSON))
     start_datetime = db.Column(db.DateTime)
     end_datetime = db.Column(db.DateTime)
     test_suite_status_id = db.Column(
@@ -140,7 +141,7 @@ class Test(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(300), nullable=False)
-    data = db.Column(db.JSON)
+    data = db.Column(MutableDict.as_mutable(db.JSON))
     test_suite_id = db.Column(
         db.Integer, db.ForeignKey("test_suite.id"), nullable=False
     )
@@ -161,6 +162,7 @@ class TestHistory(db.Model):
     error_type = db.Column(db.String(2000))
     retries = db.Column(db.Integer)
     parameters = db.Column(db.String(3000))
+    media = db.Column(MutableList.as_mutable(db.JSON))
     test_id = db.Column(db.Integer, db.ForeignKey("test.id"), nullable=False)
     test = db.relationship("Test", backref=db.backref("test", lazy=True))
     test_status_id = db.Column(
@@ -217,6 +219,7 @@ class TestRetries(db.Model):
     trace = db.Column(db.String)
     message = db.Column(db.String(2000))
     error_type = db.Column(db.String(2000))
+    media = db.Column(MutableList.as_mutable(db.JSON))
 
     def __repr__(self):
         return "<TestRetries {}>".format(self.id)
@@ -229,10 +232,6 @@ class Media(db.Model):
     name = db.Column(db.String(300))
     type = db.Column(db.String(120))
     data = db.Column(db.LargeBinary)
-    index = db.Column(db.Integer)
-    test_history_id = db.Column(
-        db.Integer, db.ForeignKey("test_history.id"), nullable=True
-    )
 
 
 # TODO:

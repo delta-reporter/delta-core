@@ -133,23 +133,16 @@ class Create:
         return test_history.id
 
     @staticmethod
-    def create_test_retry(
-        test_history_id,
-        retry_count,
-        start_datetime,
-        end_datetime,
-        trace,
-        message,
-        error_type,
-    ):
+    def create_test_retry(**kwargs):
         test_retry = models.TestRetries(
-            test_history_id=test_history_id,
-            retry_count=retry_count,
-            start_datetime=start_datetime,
-            end_datetime=end_datetime,
-            trace=trace,
-            message=message,
-            error_type=error_type,
+            test_history_id=kwargs.get("test_history_id"),
+            retry_count=kwargs.get("retry_count"),
+            start_datetime=kwargs.get("start_datetime"),
+            end_datetime=kwargs.get("end_datetime"),
+            trace=kwargs.get("trace"),
+            message=kwargs.get("message"),
+            error_type=kwargs.get("error_type"),
+            media=kwargs.get("media"),
         )
         db.session.add(test_retry)
         session_commit()
@@ -157,10 +150,8 @@ class Create:
         return test_retry.id
 
     @staticmethod
-    def store_file_into_test_history(test_history_id, name, type, file):
-        new_file = models.Media(
-            test_history_id=test_history_id, name=name, type=type, data=file
-        )
+    def store_media_file(name, type, file):
+        new_file = models.Media(name=name, type=type, data=file)
         db.session.add(new_file)
         session_commit()
 
@@ -585,11 +576,9 @@ class Read:
         return test_retries
 
     @staticmethod
-    def file_by_test_history_id(test_history_id):
+    def file_by_media_id(media_id):
         try:
-            file_data = models.Media.query.filter_by(
-                test_history_id=test_history_id
-            ).first()
+            file_data = models.Media.query.filter_by(id=media_id).first()
         except exc.SQLAlchemyError as e:
             logger.error(e)
             db.session.rollback()
@@ -609,6 +598,7 @@ class Update:
         test_history.message = message
         test_history.error_type = error_type
         test_history.test_status_id = constants.Constants.test_status.get(test_status)
+        test_history.media = None
 
         session_commit()
 
@@ -675,3 +665,16 @@ class Update:
         session_commit()
 
         return launch.id
+
+    @staticmethod
+    def add_media_to_test_history(test_history_id, media):
+        test_history = db.session.query(models.TestHistory).get(test_history_id)
+
+        if test_history.media:
+            test_history.media.append(media)
+        else:
+            test_history.media = [media]
+
+        session_commit()
+
+        return test_history.id
