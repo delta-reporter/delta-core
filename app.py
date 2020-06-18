@@ -962,7 +962,7 @@ def get_test_retries_by_test_history_id(test_history_id):
     return resp
 
 
-@app.route("/api/v1/file_receptor_test_history/<int:test_history_id>", methods=["POST"])
+@app.route("/api/v1/file_receiver_test_history/<int:test_history_id>", methods=["POST"])
 def receive_file_for_test_history(test_history_id):
     logger.info("/receive_file_for_test_history/%i", test_history_id)
 
