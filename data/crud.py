@@ -598,7 +598,6 @@ class Update:
         test_history.message = message
         test_history.error_type = error_type
         test_history.test_status_id = constants.Constants.test_status.get(test_status)
-        test_history.media = None
 
         session_commit()
 
@@ -615,6 +614,12 @@ class Update:
         session_commit()
 
         return test_history.retries
+
+    @staticmethod
+    def clean_test_history_media(test_history_id):
+        test_history = db.session.query(models.TestHistory).get(test_history_id)
+        test_history.media = None
+        session_commit()
 
     @staticmethod
     def update_test_history_resolution(test_history_id, test_resolution):

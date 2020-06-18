@@ -533,6 +533,8 @@ def create_test_history():
             error_type=test_history_check.error_type,
             media=test_history_check.media,
         )
+        crud.Update.clean_test_history_media(test_history_check.id)
+
         message = "New test retry added successfully"
 
     data = {
@@ -811,6 +813,7 @@ def get_tests_history_by_test_status_and_test_run_id(test_status_id, test_run_id
                     "error_type": test_history.error_type,
                     "retries": test_history.retries,
                     "parameters": test_history.parameters,
+                    "media": test_history.media,
                 }
             )
     else:
@@ -842,6 +845,7 @@ def get_tests_history_by_test_status_id(test_status_id):
                     ),
                     "test_status": test_history.test_status.name,
                     "test_resolution": test_history.test_resolution.name,
+                    "test_media": test_history.media,
                 }
             )
     else:
@@ -875,6 +879,7 @@ def get_tests_history_by_test_resolution_id(test_resolution_id):
                     ),
                     "test_status": test_history.test_status.name,
                     "test_resolution": test_history.test_resolution.name,
+                    "test_media": test_history.media,
                 }
             )
     else:
@@ -911,6 +916,7 @@ def get_tests_history_by_test_suite_id(test_suite_id):
                     "test_resolution": test_history.test_resolution.name,
                     "test_suite": test_suite.name,
                     "test_type": test_suite.name,
+                    "test_media": test_history.media,
                 }
             )
     else:
@@ -962,10 +968,17 @@ def receive_file_for_test_history(test_history_id):
 
     file = request.files.get("file")
     type = request.form.get("type")
+    description = request.form.get("description", "")
     file_id = crud.Create.store_media_file(file.filename, type, file.read())
 
     crud.Update.add_media_to_test_history(
-        test_history_id, {"file_id": file_id, "filename": file.filename, "type": type}
+        test_history_id,
+        {
+            "file_id": file_id,
+            "filename": file.filename,
+            "type": type,
+            "description": description,
+        },
     )
 
     data = {"message": "File stored successfully", "file_id": file_id}
