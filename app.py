@@ -5,11 +5,13 @@ from logzero import logger
 from io import BytesIO
 from flask import Flask, request, jsonify, render_template, send_file
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
 
 
 app = Flask(__name__)
 app.config.from_object(os.environ["APP_SETTINGS"])
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 db = SQLAlchemy(app)
 
 from data import crud
@@ -797,7 +799,7 @@ def get_tests_history_by_test_status_and_test_run_id(test_status_id, test_run_id
         test_suites = []
         test_suites_index = {}
         index = -1
-        
+
         test_run = {
             "test_run_id": tests_history[0][0].id,
             "launch_id": tests_history[0][0].launch.id,
