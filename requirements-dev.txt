@@ -35,3 +35,4 @@ virtualenv==20.0.17
 Werkzeug==1.0.1
 wrapt==1.12.1
 zipp==3.1.0
+flask-cors==3.0.8
