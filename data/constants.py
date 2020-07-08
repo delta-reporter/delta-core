@@ -13,8 +13,9 @@ class Constants:
     }
     test_resolution = {
         "Not set": 1,
-        "Working as expected": 2,
-        "Test Issue": 3,
-        "Environment Issue": 4,
-        "Application Issue": 5,
+        "Test is flaky": 2,
+        "Product defect": 3,
+        "Test needs to be updated": 4,
+        "To investigate": 5,
+        "Environment issue": 6,
     }
