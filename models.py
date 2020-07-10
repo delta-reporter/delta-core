@@ -1,5 +1,6 @@
 from app import db
 from sqlalchemy import event
+from sqlalchemy.sql import func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.mutable import MutableList, MutableDict
 
@@ -232,58 +233,4 @@ class Media(db.Model):
     name = db.Column(db.String(300))
     type = db.Column(db.String(120))
     data = db.Column(db.LargeBinary)
-
-
-# TODO:
-#   All these event are actually not executed
-#   Will need to check for a better way to
-#   initialize our data
-#
-
-
-@event.listens_for(ProjectStatus.__table__, "after_create")
-def insert_initial_project_status(*args, **kwargs):
-    db.session.add(ProjectStatus(name="Active"))
-    db.session.add(ProjectStatus(name="Inactive"))
-    db.session.add(ProjectStatus(name="Archived"))
-    db.session.commit()
-
-
-@event.listens_for(LaunchStatus.__table__, "after_create")
-def insert_initial_launch_status(*args, **kwargs):
-    db.session.add(LaunchStatus(name="Failed"))
-    db.session.add(LaunchStatus(name="In Process"))
-    db.session.add(LaunchStatus(name="Finished"))
-    db.session.commit()
-
-
-@event.listens_for(TestRunStatus.__table__, "after_create")
-def insert_initial_test_type(*args, **kwargs):
-    db.session.add(TestRunStatus(name="Success"))
-    db.session.add(TestRunStatus(name="Failed"))
-    db.session.add(TestRunStatus(name="Running"))
-    db.session.commit()
-
-
-@event.listens_for(TestSuiteStatus.__table__, "after_create")
-def insert_initial_test_suite_status(*args, **kwargs):
-    db.session.add(TestSuiteStatus(name="Failed"))
-    db.session.add(TestSuiteStatus(name="Successful"))
-    db.session.add(TestSuiteStatus(name="Running"))
-    db.session.commit()
-
-
-@event.listens_for(TestStatus.__table__, "after_create")
-def insert_initial_test_status(*args, **kwargs):
-    db.session.add(TestStatus(name="Fail"))
-    db.session.add(TestStatus(name="Pass"))
-    db.session.add(TestStatus(name="Running"))
-    db.session.commit()
-
-
-@event.listens_for(TestResolution.__table__, "after_create")
-def insert_initial_test_resolution(*args, **kwargs):
-    db.session.add(TestResolution(name="Test Issue"))
-    db.session.add(TestResolution(name="Environment Issue"))
-    db.session.add(TestResolution(name="Application Issue"))
-    db.session.commit()
+    created_datetime = db.Column(db.DateTime(timezone=True), server_default=func.now())
