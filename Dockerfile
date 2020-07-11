@@ -14,4 +14,4 @@ RUN apk update && apk add libpq
 ADD . /app
 WORKDIR /app
 EXPOSE 5000
-CMD ["python3", "app.py"]
+CMD ["./start_dev.sh"]
