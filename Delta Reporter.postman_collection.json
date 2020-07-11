@@ -11,11 +11,10 @@
 				"method": "POST",
 				"header": [],
 				"url": {
-					"raw": "localhost:5000/api/v1/initial_setup",
+					"raw": "{{DELTA_HOST}}/api/v1/initial_setup",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -39,7 +38,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"name\": \"DoneDeal\",\n    \"project_status_id\": 1\n} ",
+					"raw": "{\n    \"name\": \"Delta Reporter\",\n    \"project_status_id\": 1\n} ",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -47,12 +46,10 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:5000/api/v1/project",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/project",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -68,12 +65,10 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5000/api/v1/project/1",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/project/1",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -90,12 +85,10 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5000/api/v1/projects",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/projects",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -119,7 +112,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"name\": \"Launch Zero\",\n    \"data\": {\n        \"url\": \"www.deltareporter.com\"\n    },\n    \"project\": \"Delta Reporter\"\n}",
+					"raw": "{\n    \"name\": \"Launch Zero\",\n    \"project\": \"Delta Reporter\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -127,12 +120,10 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:5000/api/v1/launch",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/launch",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -148,12 +139,10 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5000/api/v1/launch/1",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/launch/1",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -170,12 +159,10 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5000/api/v1/launch/project/1",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/launch/project/1",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -202,12 +189,10 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:5000/api/v1/finish_launch",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/finish_launch",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -219,6 +204,19 @@
 		},
 		{
 			"name": "New Test Run",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "1ed0cb45-a7d7-4e09-862d-27fe4c8f43ae",
+						"exec": [
+							"var current_timestamp = new Date();",
+							"postman.setEnvironmentVariable(\"current_timestamp\", current_timestamp.toISOString());"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
 			"request": {
 				"method": "POST",
 				"header": [
@@ -231,7 +229,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"data\": {\n        \"url\": \"www.deltareporter.ie\"\n    },\n    \"start_datetime\" : \"2020-01-18T18:10:00.000\",\n    \"test_type\" : \"End to End\",\n    \"launch_id\" : 1\n}",
+					"raw": "{\n    \"start_datetime\" : \"{{current_timestamp}}\",\n    \"test_type\" : \"Unit Tests\",\n    \"launch_id\" : 1\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -239,12 +237,10 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:5000/api/v1/test_run",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/test_run",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -260,12 +256,10 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5000/api/v1/test_run/1",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/test_run/1",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -282,12 +276,10 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5000/api/v1/test_run/launch/1",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/test_run/launch/1",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -313,7 +305,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"name\": \"New Test Suite\",\n    \"data\": {\n        \"url\": \"www.deltareporter.ie\"\n    },\n    \"test_type\" : \"End to End\"\n}\n",
+					"raw": "{\n\t\"name\": \"Test Suite\",\n    \"project\": \"Delta Reporter\",\n    \"test_type\" : \"End to End\"\n}\n",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -321,12 +313,10 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:5000/api/v1/test_suite",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/test_suite",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -338,6 +328,19 @@
 		},
 		{
 			"name": "New Test Suite History",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "6aeba2ad-fc82-4944-b5c0-b5ddde5ea600",
+						"exec": [
+							"var current_timestamp = new Date();",
+							"postman.setEnvironmentVariable(\"current_timestamp\", current_timestamp.toISOString());"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
 			"request": {
 				"method": "POST",
 				"header": [
@@ -350,7 +353,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"name\": \"Basic validations\",\n    \"test_type\": \"End to End\",\n    \"start_datetime\": \"2020-06-02T08:35:30.822Z\",\n    \"test_run_id\": 1,\n    \"project\": \"Delta Reporter\"\n}",
+					"raw": "{\n    \"name\": \"Basic validations\",\n    \"test_type\": \"End to End\",\n    \"start_datetime\": \"{{current_timestamp}}\",\n    \"test_run_id\": 1,\n    \"project\": \"Delta Reporter\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -358,12 +361,10 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:5000/api/v1/test_suite_history",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/test_suite_history",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -375,6 +376,19 @@
 		},
 		{
 			"name": "Update Test Suite History",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "af8380ee-3b3b-4354-88ef-76ac29233ac5",
+						"exec": [
+							"var current_timestamp = new Date();",
+							"postman.setEnvironmentVariable(\"current_timestamp\", current_timestamp.toISOString());"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
 			"request": {
 				"method": "PUT",
 				"header": [
@@ -387,7 +401,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"test_suite_history_id\": 1,\n    \"end_datetime\": \"2020-06-02T08:36:54.940Z\",\n    \"test_suite_status\": \"Failed\"\n}",
+					"raw": "{\n    \"test_suite_history_id\": 1,\n    \"end_datetime\": \"{{current_timestamp}}\",\n    \"test_suite_status\": \"Failed\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -395,12 +409,10 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:5000/api/v1/test_suite_history",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/test_suite_history",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -416,12 +428,10 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5000/api/v1/test_suite/1",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/test_suite/1",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -438,12 +448,10 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5000/api/v1/tests_suite_history/test_run/1",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/tests_suite_history/test_run/1",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -461,12 +469,10 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5000/api/v1/tests_suite_history/test_status/1/test_run/1",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/tests_suite_history/test_status/1/test_run/1",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -494,7 +500,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"name\": \"New Test\",\n    \"data\": {\n        \"url\": \"www.deltareporter.com\"\n    },\n    \"test_suite_id\": 1\n}\n",
+					"raw": "{\n\t\"name\": \"New Test\",\n    \"test_suite_id\": 1\n}\n",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -502,12 +508,10 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:5000/api/v1/test",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/test",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -519,6 +523,19 @@
 		},
 		{
 			"name": "New Test History",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "f68b1bc4-160b-4ebb-8670-ca40dbaa44ff",
+						"exec": [
+							"var current_timestamp = new Date();",
+							"postman.setEnvironmentVariable(\"current_timestamp\", current_timestamp.toISOString());"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
 			"request": {
 				"method": "POST",
 				"header": [
@@ -531,7 +548,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"name\": \"New Test\",\n    \"start_datetime\": \"2020-06-02T08:35:30.874Z\",\n    \"test_suite_id\": 1,\n    \"test_run_id\": 114,\n    \"test_suite_history_id\": 127\n}",
+					"raw": "{\n    \"name\": \"New Test\",\n    \"start_datetime\": \"{{current_timestamp}}\",\n    \"test_suite_id\": 12,\n    \"test_run_id\": 171,\n    \"test_suite_history_id\": 187\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -539,12 +556,10 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:5000/api/v1/test_history",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/test_history",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -556,6 +571,19 @@
 		},
 		{
 			"name": "Update Test History",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "48952003-b4f7-44a9-bed9-3bba5a55d8ac",
+						"exec": [
+							"var current_timestamp = new Date();",
+							"postman.setEnvironmentVariable(\"current_timestamp\", current_timestamp.toISOString());"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
 			"request": {
 				"method": "PUT",
 				"header": [
@@ -568,7 +596,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"test_history_id\": 1,\n    \"end_datetime\": \"2020-06-02T08:35:41.348Z\",\n    \"test_status\": \"Failed\",\n    \"trace\": \"Some error happened here\",\n    \"file\": \"/path/to/my/test_file.test.ts\",\n    \"message\": \"Some cool error message\",\n    \"error_type\": \"Error\"\n}",
+					"raw": "{\n    \"test_history_id\": 1,\n    \"end_datetime\": \"{{current_timestamp}}\",\n    \"test_status\": \"Failed\",\n    \"trace\": \"Some error happened here\",\n    \"file\": \"/path/to/my/test_file.test.ts\",\n    \"message\": \"Some cool error message\",\n    \"error_type\": \"Error\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -576,12 +604,10 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:5000/api/v1/test_history",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/test_history",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -597,12 +623,10 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5000/api/v1/test/1",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/test/1",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -619,12 +643,10 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5000/api/v1/tests_history/test_status/1",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/tests_history/test_status/1",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -642,12 +664,10 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5000/api/v1/tests_history/test_status/1/test_run/1",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/tests_history/test_status/1/test_run/1",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -667,12 +687,10 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5000/api/v1/tests_history/test_resolution/1",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/tests_history/test_resolution/1",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -690,12 +708,10 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5000/api/v1/tests_history/test_suite/1",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/tests_history/test_suite/1",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -709,9 +725,6 @@
 		},
 		{
 			"name": "Get Tests by Test Run ID",
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
 			"request": {
 				"method": "GET",
 				"header": [
@@ -722,28 +735,17 @@
 						"type": "text"
 					}
 				],
-				"body": {
-					"mode": "raw",
-					"raw": "",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
 				"url": {
-					"raw": "http://localhost:5000/api/v1/tests_history/test_run/5",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/tests_history/test_run/1",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
 						"tests_history",
 						"test_run",
-						"5"
+						"1"
 					]
 				}
 			},
@@ -774,12 +776,10 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:5000/api/v1/tests_retries/1",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/tests_retries/1",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -797,7 +797,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"test_history_id\": 2,\n\t\"test_resolution\": \"Working as expected\"\n}",
+					"raw": "{\n\t\"test_history_id\": 1,\n\t\"test_resolution\": \"Test needs to be updated\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -805,12 +805,10 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:5000/api/v1/test_history_resolution",
-					"protocol": "http",
+					"raw": "{{DELTA_HOST}}/api/v1/test_history_resolution",
 					"host": [
-						"localhost"
+						"{{DELTA_HOST}}"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"v1",
@@ -819,6 +817,129 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "Receive file into test history id",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": []
+						},
+						{
+							"key": "type",
+							"value": "video",
+							"description": "Value can be 'video' or 'img'",
+							"type": "text"
+						},
+						{
+							"key": "description",
+							"value": "",
+							"type": "text"
+						}
+					],
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{DELTA_HOST}}/api/v1/file_receiver_test_history/1",
+					"host": [
+						"{{DELTA_HOST}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"file_receiver_test_history",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get file by ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{DELTA_HOST}}/api/v1/get_file/1",
+					"host": [
+						"{{DELTA_HOST}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"get_file",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Finish Launch",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"launch_id\": 1\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{DELTA_HOST}}/api/v1/finish_launch",
+					"host": [
+						"{{DELTA_HOST}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"finish_launch"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "02a10c41-5e05-48ab-aa0e-bcd916407f6a",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "5702897d-8087-420b-b864-e839512362bb",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "464c599e-554e-44ca-9122-fe581844d15b",
+			"key": "DELTA_HOST",
+			"value": "http://localhost:5000"
 		}
 	],
 	"protocolProfileBehavior": {}
