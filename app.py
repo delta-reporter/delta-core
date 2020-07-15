@@ -555,11 +555,15 @@ def update_test_history_resolution():
     params = request.get_json(force=True)
     logger.info("/update_test_history_resolution/%s", params)
 
-    crud.Update.update_test_history_resolution(
+    test_history = crud.Update.update_test_history_resolution(
         params.get("test_history_id"), params.get("test_resolution")
     )
 
-    data = {"message": "Test history resolution updated successfully"}
+    data = {
+        "message": "Test history resolution updated successfully", 
+        "resolution": test_history.test_resolution_id, 
+        "test_history_id": test_history.id 
+    }
 
     resp = jsonify(data)
     resp.status_code = 200
@@ -770,6 +774,12 @@ def get_tests_history_by_test_status_and_test_run_id(test_status_id, test_run_id
         for table in tests_history:
             test_suite_history = table[1]
             test_history = table[2]
+            total_count = table[3]
+            failed_count = table[4]
+            passed_count = table[5]
+            running_count = table[6]
+            incomplete_count = table[7]
+            skipped_count = table[8]
             if test_suites == [] or test_suite_history.id not in list(
                 test_suites_index.keys()
             ):
@@ -787,6 +797,12 @@ def get_tests_history_by_test_status_and_test_run_id(test_status_id, test_run_id
                             test_suite_history.end_datetime,
                         ),
                         "test_suite_status": test_suite_history.test_suite_status.name,
+                        "tests_total": total_count if total_count else 0,
+                        "tests_failed": failed_count if failed_count else 0,
+                        "tests_passed": passed_count if passed_count else 0,
+                        "tests_running": running_count if running_count else 0,
+                        "tests_incomplete": incomplete_count if incomplete_count else 0,
+                        "tests_skipped": skipped_count if skipped_count else 0,
                         "tests": [],
                     }
                 )
