@@ -379,17 +379,6 @@ class Read:
         return test
 
     @staticmethod
-    def test_by_id(test_id):
-        try:
-            test = models.Test.query.filter_by(id=test_id).first()
-        except exc.SQLAlchemyError as e:
-            logger.error(e)
-            db.session.rollback()
-            test = None
-
-        return test
-
-    @staticmethod
     def test_suite_history_by_test_run(test_run_id):
         try:
             test_suite_history = (
@@ -555,8 +544,14 @@ class Read:
                     == t_counts.skipped_tests_by_test_suite_history_id.c.test_suite_history_id,
                 )
                 .filter(models.TestRun.id == models.TestSuiteHistory.test_run_id)
-                .filter(models.TestSuiteHistory.test_run_id == models.TestHistory.test_run_id)
-                .filter(models.TestSuiteHistory.id  == models.TestHistory.test_suite_history_id)
+                .filter(
+                    models.TestSuiteHistory.test_run_id
+                    == models.TestHistory.test_run_id
+                )
+                .filter(
+                    models.TestSuiteHistory.id
+                    == models.TestHistory.test_suite_history_id
+                )
                 .filter(models.TestRun.id == test_run_id)
                 .filter(models.TestHistory.test_status_id == test_status_id)
                 .all()
@@ -633,6 +628,22 @@ class Read:
             db.session.rollback()
 
         return file_data
+
+    @staticmethod
+    def test_history_by_test_id(test_id):
+        try:
+            test_history = (
+                models.TestHistory.query.filter_by(test_id=test_id)
+                .order_by(models.TestHistory.end_datetime.desc())
+                .limit(5)
+                .all()
+            )
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            test_history = None
+
+        return test_history
 
 
 class Update:
