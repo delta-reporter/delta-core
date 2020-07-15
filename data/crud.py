@@ -508,9 +508,52 @@ class Read:
 
     @staticmethod
     def test_history_by_test_status_and_test_run_id(test_status_id, test_run_id):
+        
+        t_counts = TestCounts()
+        
         try:
             test_history = (
-                db.session.query(models.TestRun, models.TestSuiteHistory, models.TestHistory)
+                db.session.query(
+                    models.TestRun,
+                    models.TestSuiteHistory,
+                    models.TestHistory,
+                    t_counts.total_tests_by_test_suite_history_id.c.tests_count,
+                    t_counts.failed_tests_by_test_suite_history_id.c.failed_tests_count,
+                    t_counts.passed_tests_by_test_suite_history_id.c.passed_tests_count,
+                    t_counts.running_tests_by_test_suite_history_id.c.running_tests_count,
+                    t_counts.incomplete_tests_by_test_suite_history_id.c.incomplete_tests_count,
+                    t_counts.skipped_tests_by_test_suite_history_id.c.skipped_tests_count,
+                )
+                .outerjoin(
+                    t_counts.total_tests_by_test_suite_history_id,
+                    models.TestSuiteHistory.id
+                    == t_counts.total_tests_by_test_suite_history_id.c.test_suite_history_id,
+                )
+                .outerjoin(
+                    t_counts.failed_tests_by_test_suite_history_id,
+                    models.TestSuiteHistory.id
+                    == t_counts.failed_tests_by_test_suite_history_id.c.test_suite_history_id,
+                )
+                .outerjoin(
+                    t_counts.passed_tests_by_test_suite_history_id,
+                    models.TestSuiteHistory.id
+                    == t_counts.passed_tests_by_test_suite_history_id.c.test_suite_history_id,
+                )
+                .outerjoin(
+                    t_counts.running_tests_by_test_suite_history_id,
+                    models.TestSuiteHistory.id
+                    == t_counts.running_tests_by_test_suite_history_id.c.test_suite_history_id,
+                )
+                .outerjoin(
+                    t_counts.incomplete_tests_by_test_suite_history_id,
+                    models.TestSuiteHistory.id
+                    == t_counts.incomplete_tests_by_test_suite_history_id.c.test_suite_history_id,
+                )
+                .outerjoin(
+                    t_counts.skipped_tests_by_test_suite_history_id,
+                    models.TestSuiteHistory.id
+                    == t_counts.skipped_tests_by_test_suite_history_id.c.test_suite_history_id,
+                )
                 .filter(models.TestRun.id == models.TestSuiteHistory.test_run_id)
                 .filter(models.TestSuiteHistory.test_run_id == models.TestHistory.test_run_id)
                 .filter(models.TestSuiteHistory.id  == models.TestHistory.test_suite_history_id)
@@ -636,7 +679,7 @@ class Update:
 
         session_commit()
 
-        return test_history.id
+        return test_history
 
     @staticmethod
     def update_test_suite_history(

@@ -579,14 +579,14 @@ def update_test_history_resolution():
     params = request.get_json(force=True)
     logger.info("/update_test_history_resolution/%s", params)
 
-    crud.Update.update_test_history_resolution(
+    test_history = crud.Update.update_test_history_resolution(
         params.get("test_history_id"), params.get("test_resolution")
     )
 
     data = {
         "message": "Test history resolution updated successfully", 
-        "resolution": params.get("test_resolution"), 
-        "test_history_id": params.get("test_history_id")
+        "resolution": test_history.test_resolution_id, 
+        "test_history_id": test_history.id 
     }
 
     resp = jsonify(data)
