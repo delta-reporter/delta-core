@@ -472,30 +472,6 @@ def get_test_suite(test_suite_id):
     return resp
 
 
-@app.route("/api/v1/test", methods=["POST"])
-def create_test():
-    params = request.get_json(force=True)
-    logger.info("/create_test/%s", params)
-
-    test_check = crud.Read.test_by_name(params.get("name"))
-
-    if not test_check:
-        test_id = crud.Create.create_test(
-            params.get("name"), None, params.get("test_suite_id")
-        )
-        message = "New test added successfully"
-    else:
-        test_id = test_check.id
-        message = "Test is already present"
-
-    data = {"message": message, "test_id": test_id}
-
-    resp = jsonify(data)
-    resp.status_code = 200
-
-    return resp
-
-
 @app.route("/api/v1/test_history", methods=["POST"])
 def create_test_history():
     params = request.get_json(force=True)
@@ -760,28 +736,6 @@ def get_tests_history_by_test_run(test_run_id):
     return resp
 
 
-@app.route("/api/v1/test/<int:test_id>", methods=["GET"])
-def get_test_by_test_id(test_id):
-    logger.info("/test/%i", test_id)
-
-    result = crud.Read.test_by_id(test_id)
-
-    if result:
-        data = {
-            "test_id": result.id,
-            "name": result.name,
-            "data": result.data,
-            "test_suite_id": result.test_suite_id,
-        }
-    else:
-        data = {"message": "No test with the id provided was found"}
-
-    resp = jsonify(data)
-    resp.status_code = 200
-
-    return resp
-
-
 @app.route(
     "/api/v1/tests_history/test_status/<int:test_status_id>/test_run/<int:test_run_id>",
     methods=["GET"],
@@ -1028,6 +982,42 @@ def receive_file_for_test_history(test_history_id):
 
     resp = jsonify(data)
     resp.status_code = 200
+
+    return resp
+
+
+@app.route("/api/v1/test_history/test_id/<int:test_id>", methods=["GET"])
+def get_test_history_by_test_id(test_id):
+    logger.info("/tests_history_by_test_id/%i", test_id)
+    status = 200
+
+    results = crud.Read.test_history_by_test_id(test_id)
+
+    if results:
+        data = []
+        for test_history in results:
+            data.append(
+                {
+                    "test_history_id": test_history.id,
+                    "start_datetime": test_history.start_datetime,
+                    "end_datetime": test_history.end_datetime,
+                    "duration": diff_dates(
+                        test_history.start_datetime, test_history.end_datetime
+                    ),
+                    "status": test_history.test_status.name,
+                    "resolution": test_history.test_resolution.name,
+                    "trace": test_history.trace,
+                    "message": test_history.message,
+                    "error_type": test_history.error_type,
+                    "media": test_history.media,
+                }
+            )
+    else:
+        data = {"message": "No history was found"}
+        status = 204
+
+    resp = jsonify(data)
+    resp.status_code = status
 
     return resp
 
