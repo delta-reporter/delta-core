@@ -752,6 +752,27 @@
 			"response": []
 		},
 		{
+			"name": "Get Test History by Test ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{DELTA_HOST}}/api/v1/test_history/test_id/1",
+					"host": [
+						"{{DELTA_HOST}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"test_history",
+						"test_id",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Get Test Retries by Test History ID",
 			"protocolProfileBehavior": {
 				"disableBodyPruning": true
@@ -937,7 +958,7 @@
 	],
 	"variable": [
 		{
-			"id": "464c599e-554e-44ca-9122-fe581844d15b",
+			"id": "cd6d5e0c-7323-4d5d-8e26-40275f916cf9",
 			"key": "DELTA_HOST",
 			"value": "http://localhost:5000"
 		}
