@@ -497,9 +497,9 @@ class Read:
 
     @staticmethod
     def test_history_by_test_status_and_test_run_id(test_status_id, test_run_id):
-        
+
         t_counts = TestCounts()
-        
+
         try:
             test_history = (
                 db.session.query(
@@ -633,7 +633,11 @@ class Read:
     def test_history_by_test_id(test_id):
         try:
             test_history = (
-                models.TestHistory.query.filter_by(test_id=test_id)
+                models.TestHistory.query.filter(
+                    models.TestHistory.test_id == test_id,
+                    models.TestHistory.test_status_id
+                    != constants.Constants.test_status["Running"],
+                )
                 .order_by(models.TestHistory.end_datetime.desc())
                 .limit(5)
                 .all()
