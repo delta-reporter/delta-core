@@ -1,5 +1,6 @@
 import os
 import datetime
+from art import text2art
 from dateutil.relativedelta import relativedelta
 from logzero import logger
 from io import BytesIO
@@ -560,9 +561,9 @@ def update_test_history_resolution():
     )
 
     data = {
-        "message": "Test history resolution updated successfully", 
-        "resolution": test_history.test_resolution_id, 
-        "test_history_id": test_history.id 
+        "message": "Test history resolution updated successfully",
+        "resolution": test_history.test_resolution_id,
+        "test_history_id": test_history.id,
     }
 
     resp = jsonify(data)
@@ -1077,4 +1078,12 @@ def diff_dates(date1, date2):
 
 
 if __name__ == "__main__":
+    print("Δ Delta Reporter - Core Service")
+    print(
+        text2art(
+            """Δ Delta Reporter
+    Core Service""",
+            font="Greek",
+        )
+    )
     app.run(host=os.getenv("HOST", "0.0.0.0"), port=os.getenv("PORT", 5000))
