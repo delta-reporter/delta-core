@@ -5,7 +5,7 @@ from logzero import logger
 from sqlalchemy import exc
 from sqlalchemy.sql import func
 from data.subqueries import TestCounts
-
+import re
 
 def session_commit():
     try:
@@ -496,8 +496,11 @@ class Read:
         return test_history
 
     @staticmethod
-    def test_history_by_test_status_and_test_run_id(test_status_id, test_run_id):
+    def test_history_by_array_of_test_statuses_and_test_run_id(test_statuses_ids, test_run_id):
 
+        array_of_statuses = re.findall('\d+', test_statuses_ids)  # getting all numbers from string
+        print ("Test statuses array: ", array_of_statuses) 
+        
         t_counts = TestCounts()
 
         try:
@@ -553,7 +556,7 @@ class Read:
                     == models.TestHistory.test_suite_history_id
                 )
                 .filter(models.TestRun.id == test_run_id)
-                .filter(models.TestHistory.test_status_id == test_status_id)
+                .filter(models.TestHistory.test_status_id.in_(array_of_statuses))
                 .all()
             )
         except exc.SQLAlchemyError as e:
@@ -562,7 +565,7 @@ class Read:
             test_history = None
 
         return test_history
-
+    
     @staticmethod
     def test_history_by_test_status_id(test_status_id):
         try:

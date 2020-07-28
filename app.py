@@ -742,16 +742,16 @@ def get_tests_history_by_test_run(test_run_id):
 
 
 @app.route(
-    "/api/v1/tests_history/test_status/<int:test_status_id>/test_run/<int:test_run_id>",
+    "/api/v1/tests_history/test_status/<test_statuses_ids>/test_run/<int:test_run_id>",
     methods=["GET"],
 )
-def get_tests_history_by_test_status_and_test_run_id(test_status_id, test_run_id):
+def get_tests_history_by_test_status_and_test_run_id(test_statuses_ids, test_run_id):
     logger.info(
-        "/tests_history/test_status/%i/test_run/%i/", test_status_id, test_run_id
+        "/tests_history/test_status/%s/test_run/%i/", test_statuses_ids, test_run_id
     )
 
-    tests_history = crud.Read.test_history_by_test_status_and_test_run_id(
-        test_status_id=test_status_id, test_run_id=test_run_id
+    tests_history = crud.Read.test_history_by_array_of_test_statuses_and_test_run_id(
+        test_statuses_ids=test_statuses_ids, test_run_id=test_run_id
     )
 
     if tests_history:
