@@ -771,6 +771,7 @@ def get_tests_history_by_test_status_and_test_run_id(test_statuses_ids, test_run
                 tests_history[0][0].start_datetime, tests_history[0][0].end_datetime
             ),
             "test_run_status": tests_history[0][0].test_run_status.name,
+            "launch_data": tests_history[0][0].launch.data,
         }
         for table in tests_history:
             test_suite_history = table[1]

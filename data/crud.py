@@ -7,6 +7,7 @@ from sqlalchemy.sql import func
 from data.subqueries import TestCounts
 import re
 
+
 def session_commit():
     try:
         db.session.commit()
@@ -496,11 +497,15 @@ class Read:
         return test_history
 
     @staticmethod
-    def test_history_by_array_of_test_statuses_and_test_run_id(test_statuses_ids, test_run_id):
+    def test_history_by_array_of_test_statuses_and_test_run_id(
+        test_statuses_ids, test_run_id
+    ):
 
-        array_of_statuses = re.findall('\d+', test_statuses_ids)  # getting all numbers from string
-        print ("Test statuses array: ", array_of_statuses) 
-        
+        array_of_statuses = re.findall(
+            "\d+", test_statuses_ids
+        )  # getting all numbers from string
+        print("Test statuses array: ", array_of_statuses)
+
         t_counts = TestCounts()
 
         try:
@@ -565,7 +570,7 @@ class Read:
             test_history = None
 
         return test_history
-    
+
     @staticmethod
     def test_history_by_test_status_id(test_status_id):
         try:
@@ -675,7 +680,7 @@ class Update:
         test_history = db.session.query(models.TestHistory).get(test_history_id)
 
         test_history.retries = (
-            0 if test_history.retries is None else test_history.retries + 1
+            1 if test_history.retries is None else test_history.retries + 1
         )
 
         session_commit()
