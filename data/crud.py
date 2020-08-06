@@ -722,13 +722,15 @@ class Update:
         return test_suite_history.id
 
     @staticmethod
-    def update_test_run(test_run_id, end_datetime, data, test_run_status):
+    def update_test_run(test_run_id, end_datetime, test_run_status, data):
         test_run = db.session.query(models.TestRun).get(test_run_id)
         test_run.end_datetime = end_datetime
-        test_run.data = data
-        test_run.test_run_status_id = constants.Constants.test_run_status.get(
-            test_run_status
-        )
+        if test_run.data is None:
+            test_run.data = data
+        if test_run_status is not None:
+            test_run.test_run_status_id = constants.Constants.test_run_status.get(
+                test_run_status
+            )
 
         session_commit()
 

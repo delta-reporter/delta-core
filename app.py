@@ -268,8 +268,8 @@ def update_test_run():
     test_run_id = crud.Update.update_test_run(
         params.get("test_run_id"),
         params.get("end_datetime"),
-        params.get("data"),
         params.get("test_run_status"),
+        params.get("data"),
     )
 
     data = {"message": "Test run updated successfully", "id": test_run_id}
@@ -771,7 +771,7 @@ def get_tests_history_by_test_status_and_test_run_id(test_statuses_ids, test_run
                 tests_history[0][0].start_datetime, tests_history[0][0].end_datetime
             ),
             "test_run_status": tests_history[0][0].test_run_status.name,
-            "launch_data": tests_history[0][0].launch.data,
+            "test_run_data": tests_history[0][0].data,
         }
         for table in tests_history:
             test_suite_history = table[1]
