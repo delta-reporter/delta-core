@@ -498,6 +498,7 @@ def create_test_history():
             params.get("test_run_id"),
             params.get("test_suite_history_id"),
             params.get("parameters"),
+            params.get("status"),
         )
     else:
         test_history_id = test_history_check.id

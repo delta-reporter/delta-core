@@ -117,12 +117,14 @@ class Create:
 
     @staticmethod
     def create_test_history(
-        start_datetime, test_id, test_run_id, test_suite_history_id, parameters
+        start_datetime, test_id, test_run_id, test_suite_history_id, parameters, status
     ):
         test_history = models.TestHistory(
             start_datetime=start_datetime,
             test_id=test_id,
-            test_status_id=constants.Constants.test_status["Running"],
+            test_status_id=constants.Constants.test_status["Running"]
+            if not status
+            else constants.Constants.test_status[status],
             test_resolution_id=constants.Constants.test_resolution["Not set"],
             test_run_id=test_run_id,
             test_suite_history_id=test_suite_history_id,
