@@ -412,12 +412,19 @@ def create_test_suite_history():
     else:
         test_suite_id = test_suite_check.id
 
-    test_suite_history_id = crud.Create.create_test_suite_history(
-        params.get("data"),
-        params.get("start_datetime"),
-        params.get("test_run_id"),
-        test_suite_id,
+    test_suite_history_check = crud.Read.test_suite_history_by_suite_id_test_run(
+        params.get("test_run_id"), test_suite_id
     )
+
+    if not test_suite_history_check:
+        test_suite_history_id = crud.Create.create_test_suite_history(
+            params.get("data"),
+            params.get("start_datetime"),
+            params.get("test_run_id"),
+            test_suite_id,
+        )
+    else:
+        test_suite_history_id = test_suite_history_check.id
 
     data = {
         "message": "New test suite history added successfully",

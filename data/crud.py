@@ -371,6 +371,19 @@ class Read:
         return test_suite
 
     @staticmethod
+    def test_suite_history_by_suite_id_test_run(test_run_id, test_suite_id):
+        try:
+            test_suite_history = models.TestSuiteHistory.query.filter_by(
+                test_run_id=test_run_id, test_suite_id=test_suite_id
+            ).first()
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            test_suite_history = None
+
+        return test_suite_history
+
+    @staticmethod
     def test_by_name(test_name):
         try:
             test = models.Test.query.filter_by(name=test_name).first()
