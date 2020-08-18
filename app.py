@@ -479,26 +479,6 @@ def get_test_suite(test_suite_id):
 
     return resp
 
-@app.route("/api/v1/test/test_id/<int:test_id>", methods=["GET"])
-def get_test_by_test_id(test_id):
-    logger.info("/test/test_id/%i", test_id)
-
-    result = crud.Read.test_by_id(test_id)
-
-    if result:
-        data = {
-            "test_id": result.id,
-            "name": result.name,
-            "test_resolution_id": result.test_resolution_id,
-        }
-    else:
-        data = {"message": "No test with the test id provided was found"}
-
-    resp = jsonify(data)
-    resp.status_code = 200
-
-    return resp
-
 @app.route("/api/v1/test_history", methods=["POST"])
 def create_test_history():
     params = request.get_json(force=True)
@@ -760,6 +740,7 @@ def get_tests_history_by_test_run(test_run_id):
                     ),
                     "status": test_history.test_status.name,
                     "resolution": test_history.test_resolution.name,
+                    "general_test_resolution": test_history.general_test_resolution.name,
                     "parameters": test_history.parameters,
                     "media": test_history.media,
                 }

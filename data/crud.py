@@ -393,17 +393,6 @@ class Read:
             test = None
 
         return test
-    
-    @staticmethod
-    def test_by_id(test_id):
-        try:
-            test = models.Test.query.filter_by(id=test_id).first()
-        except exc.SQLAlchemyError as e:
-            logger.error(e)
-            db.session.rollback()
-            test = None
-
-        return test
 
     @staticmethod
     def test_suite_history_by_test_run(test_run_id):

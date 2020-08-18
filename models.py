@@ -149,6 +149,9 @@ class Test(db.Model):
     test_resolution_id = db.Column(
         db.Integer, db.ForeignKey("test_resolution.id"), nullable=True
     )
+    test_resolution = db.relationship(
+        "TestResolution", backref=db.backref("general_test_resolution", lazy=True)
+    )
     
     def __repr__(self):
         return "<Test {}>".format(self.name)
