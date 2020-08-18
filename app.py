@@ -1038,7 +1038,7 @@ def get_test_history_by_test_id(test_id):
                         test_history.start_datetime, test_history.end_datetime
                     ),
                     "status": test_history.test_status.name,
-                    "resolution": test_history.test_resolution.name,
+                    "resolution": test_history.test_resolution.id,
                     "trace": test_history.trace,
                     "message": test_history.message,
                     "error_type": test_history.error_type,
