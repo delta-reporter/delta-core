@@ -479,6 +479,25 @@ def get_test_suite(test_suite_id):
 
     return resp
 
+@app.route("/api/v1/test/test_id/<int:test_id>", methods=["GET"])
+def get_test_by_test_id(test_id):
+    logger.info("/test/test_id/%i", test_id)
+
+    result = crud.Read.test_by_id(test_id)
+
+    if result:
+        data = {
+            "test_id": result.id,
+            "name": result.name,
+            "test_resolution_id": result.test_resolution_id,
+        }
+    else:
+        data = {"message": "No test with the test id provided was found"}
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
 
 @app.route("/api/v1/test_history", methods=["POST"])
 def create_test_history():
@@ -567,11 +586,16 @@ def update_test_history_resolution():
     test_history = crud.Update.update_test_history_resolution(
         params.get("test_history_id"), params.get("test_resolution")
     )
+    
+    test = crud.Update.update_general_test_resolution(
+        params.get("test_id"), params.get("test_resolution")
+    )
 
     data = {
         "message": "Test history resolution updated successfully",
         "resolution": test_history.test_resolution_id,
         "test_history_id": test_history.id,
+        "test_id": test.id,
     }
 
     resp = jsonify(data)

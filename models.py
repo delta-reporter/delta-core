@@ -146,7 +146,10 @@ class Test(db.Model):
     test_suite_id = db.Column(
         db.Integer, db.ForeignKey("test_suite.id"), nullable=False
     )
-
+    test_resolution_id = db.Column(
+        db.Integer, db.ForeignKey("test_resolution.id"), nullable=True
+    )
+    
     def __repr__(self):
         return "<Test {}>".format(self.name)
 
