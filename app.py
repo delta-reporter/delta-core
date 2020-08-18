@@ -739,7 +739,7 @@ def get_tests_history_by_test_run(test_run_id):
                         test_history.start_datetime, test_history.end_datetime
                     ),
                     "status": test_history.test_status.name,
-                    "test_history_resolution": test_history.test_resolution.name,
+                    "test_history_resolution": test_history.test_resolution.id,
                     "test_resolution": test_history.test.test_resolution_id,
                     "parameters": test_history.parameters,
                     "media": test_history.media,
@@ -838,7 +838,7 @@ def get_tests_history_by_test_status_and_test_run_id(test_statuses_ids, test_run
                         test_history.start_datetime, test_history.end_datetime
                     ),
                     "status": test_history.test_status.name,
-                    "test_history_resolution": test_history.test_resolution.name,
+                    "test_history_resolution": test_history.test_resolution.id,
                     "test_resolution": test_history.test.test_resolution_id,
                     "parameters": test_history.parameters,
                     "media": test_history.media,
