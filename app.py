@@ -740,7 +740,7 @@ def get_tests_history_by_test_run(test_run_id):
                     ),
                     "status": test_history.test_status.name,
                     "resolution": test_history.test_resolution.name,
-                    "general_test_resolution": test_history.general_test_resolution.name,
+                    "general_test_resolution": test_history.test.test_resolution_id,
                     "parameters": test_history.parameters,
                     "media": test_history.media,
                 }
