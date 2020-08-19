@@ -718,6 +718,17 @@ class Update:
         session_commit()
 
         return test_history
+    
+    @staticmethod
+    def update_general_test_resolution(test_id, test_resolution):
+        test = db.session.query(models.Test).get(test_id)
+        test.test_resolution_id = constants.Constants.test_resolution.get(
+            test_resolution
+        )
+
+        session_commit()
+
+        return test
 
     @staticmethod
     def update_test_suite_history(

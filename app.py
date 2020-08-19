@@ -479,7 +479,6 @@ def get_test_suite(test_suite_id):
 
     return resp
 
-
 @app.route("/api/v1/test_history", methods=["POST"])
 def create_test_history():
     params = request.get_json(force=True)
@@ -567,11 +566,16 @@ def update_test_history_resolution():
     test_history = crud.Update.update_test_history_resolution(
         params.get("test_history_id"), params.get("test_resolution")
     )
+    
+    test = crud.Update.update_general_test_resolution(
+        params.get("test_id"), params.get("test_resolution")
+    )
 
     data = {
         "message": "Test history resolution updated successfully",
         "resolution": test_history.test_resolution_id,
         "test_history_id": test_history.id,
+        "test_id": test.id,
     }
 
     resp = jsonify(data)
@@ -735,7 +739,8 @@ def get_tests_history_by_test_run(test_run_id):
                         test_history.start_datetime, test_history.end_datetime
                     ),
                     "status": test_history.test_status.name,
-                    "resolution": test_history.test_resolution.name,
+                    "test_history_resolution": test_history.test_resolution.id,
+                    "test_resolution": test_history.test.test_resolution_id,
                     "parameters": test_history.parameters,
                     "media": test_history.media,
                 }
@@ -833,7 +838,8 @@ def get_tests_history_by_test_status_and_test_run_id(test_statuses_ids, test_run
                         test_history.start_datetime, test_history.end_datetime
                     ),
                     "status": test_history.test_status.name,
-                    "resolution": test_history.test_resolution.name,
+                    "test_history_resolution": test_history.test_resolution.id,
+                    "test_resolution": test_history.test.test_resolution_id,
                     "parameters": test_history.parameters,
                     "media": test_history.media,
                 }
@@ -1032,7 +1038,7 @@ def get_test_history_by_test_id(test_id):
                         test_history.start_datetime, test_history.end_datetime
                     ),
                     "status": test_history.test_status.name,
-                    "resolution": test_history.test_resolution.name,
+                    "resolution": test_history.test_resolution.id,
                     "trace": test_history.trace,
                     "message": test_history.message,
                     "error_type": test_history.error_type,
