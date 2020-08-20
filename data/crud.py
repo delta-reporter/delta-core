@@ -47,9 +47,12 @@ class Create:
         return
 
     @staticmethod
-    def create_project(name):
+    def create_project(name, status):
         project = models.Project(
-            name=name, project_status_id=constants.Constants.project_status["Active"]
+            name=name,
+            project_status_id=constants.Constants.project_status["Active"]
+            if not status
+            else constants.Constants.project_status[status],
         )
         db.session.add(project)
         session_commit()
@@ -718,7 +721,7 @@ class Update:
         session_commit()
 
         return test_history
-    
+
     @staticmethod
     def update_general_test_resolution(test_id, test_resolution):
         test = db.session.query(models.Test).get(test_id)

@@ -1,5 +1,6 @@
 import os
 import datetime
+import requests
 from art import text2art
 from dateutil.relativedelta import relativedelta
 from logzero import logger
@@ -16,6 +17,8 @@ cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 db = SQLAlchemy(app)
 
 from data import crud
+
+websockets_url = "http://delta_websockets:8080/send_event"
 
 
 @app.route("/")
@@ -53,11 +56,24 @@ def create_project():
     params = request.get_json(force=True)
     logger.info("/projects/%s", params)
 
-    project_check = crud.Read.project_by_name(params["name"])
+    project_check = crud.Read.project_by_name(params.get("name"))
 
     if not project_check:
-        project_id = crud.Create.create_project(params["name"])
+        project_id = crud.Create.create_project(
+            params.get("name"), params.get("project_status")
+        )
         message = "New project added successfully"
+        project_event = {
+            "event": "delta_project",
+            "data": {
+                "name": params.get("name"),
+                "project_id": project_id,
+                "project_status": params.get("project_status"),
+            },
+        }
+        logger.info("Sending websocket event... ")
+        result = requests.post(websockets_url, json=project_event)
+        logger.info("Response from websocket service: %s", result)
     else:
         project_id = project_check.id
         message = "Project recovered successfully"
@@ -479,6 +495,7 @@ def get_test_suite(test_suite_id):
 
     return resp
 
+
 @app.route("/api/v1/test_history", methods=["POST"])
 def create_test_history():
     params = request.get_json(force=True)
@@ -566,7 +583,7 @@ def update_test_history_resolution():
     test_history = crud.Update.update_test_history_resolution(
         params.get("test_history_id"), params.get("test_resolution")
     )
-    
+
     test = crud.Update.update_general_test_resolution(
         params.get("test_id"), params.get("test_resolution")
     )

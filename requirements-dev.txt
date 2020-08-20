@@ -37,3 +37,4 @@ wrapt==1.12.1
 zipp==3.1.0
 flask-cors==3.0.8
 art==4.7
+requests==2.24.0
