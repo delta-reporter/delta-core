@@ -1064,6 +1064,22 @@ def get_file_by_media_id(media_id):
     return send_file(BytesIO(file.data), attachment_filename=file.name)
 
 
+@app.route("/api/v1/update_project_name", methods=["PUT"])
+def update_project_name():
+    params = request.get_json(force=True)
+    logger.info("/update_project_name/%s", params)
+    
+    project_name = crud.Update.update_project_name(
+        params.get("id"), params.get("name")
+    )
+
+    data = {"message": "Project name updated successfully", "project_name": project_name}
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
 @app.errorhandler(404)
 def notfound(error):
     data = {"message": "The endpoint requested was not found"}
