@@ -787,7 +787,8 @@ class Update:
     @staticmethod
     def update_project_name(id, name):
         project = db.session.query(models.Project).get(id)
-        project.name = name
+        if project.name!=name:
+            project.name = name
 
         session_commit()
 
