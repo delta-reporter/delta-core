@@ -786,3 +786,13 @@ class Update:
         session_commit()
 
         return test_history.id
+    
+    @staticmethod
+    def update_project_name(id, name):
+        project = db.session.query(models.Project).get(id)
+        if project.name!=name:
+            project.name = name
+
+        session_commit()
+
+        return project.name
