@@ -20,4 +20,5 @@ steps:
     git checkout $(Build.SourceBranchName)
     git remote add heroku https://heroku:$(heroku_token)@git.heroku.com/delta-core.git
     git push heroku $(Build.SourceBranchName)
+    heroku run -a delta-core python manage.py db upgrade
   displayName: 'Delta Core Service Heroku Deployment'
