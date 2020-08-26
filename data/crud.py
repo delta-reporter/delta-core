@@ -44,8 +44,6 @@ class Create:
 
         session_commit()
 
-        return
-
     @staticmethod
     def create_project(name, status):
         project = models.Project(
@@ -786,13 +784,25 @@ class Update:
         session_commit()
 
         return test_history.id
-    
+
     @staticmethod
     def update_project_name(id, name):
         project = db.session.query(models.Project).get(id)
-        if project.name!=name:
+        if project.name != name:
             project.name = name
 
         session_commit()
 
         return project.name
+
+
+class Delete:
+    @staticmethod
+    def delete_project(project_id):
+        project = db.session.query(models.Project).get(project_id)
+        if project is None:
+            return "Project already deleted"
+        db.session.delete(project)
+        session_commit()
+
+        return "Project deleted successfully"

@@ -86,6 +86,20 @@ def create_project():
     return resp
 
 
+@app.route("/api/v1/project/<int:project_id>", methods=["DELETE"])
+def delete_project(project_id):
+    logger.info("/delete_project/%s", project_id)
+
+    message = crud.Delete.delete_project(project_id)
+
+    data = {"message": message}
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
+
 @app.route("/api/v1/projects", methods=["GET"])
 def get_projects():
     logger.info("/get_projects/")
@@ -138,16 +152,41 @@ def create_launch():
     params = request.get_json(force=True)
     logger.info("/launches/%s", params)
 
-    project_check = crud.Read.project_by_name(params["project"])
+    project_check = crud.Read.project_by_name(params.get("project"))
 
     if not project_check:
-        project_id = crud.Create.create_project(params["project"])
+        project_id = crud.Create.create_project(params.get("project"))
     else:
         project_id = project_check.id
 
     launch_id = crud.Create.create_launch(
-        params["name"], params.get("data"), project_id
+        params.get("name"), params.get("data"), project_id
     )
+
+    # project_event = {
+    #     "event": "delta_project",
+    #     "data": {
+    #         "name": params.get("name"),
+    #         "project_id": project_id,
+    #         "project_status": params.get("project_status"),
+    #     },
+    # }
+
+    launch_event = {
+        "event": "delta_launch",
+        "data": {
+            "launch_id": launch_id,
+            "launch_status": "In Process",
+            "name": params.get("name"),
+            "project": params.get("project"),
+            "project_id": project_id,
+            "test_run_stats": [],
+        },
+    }
+
+    logger.info("Sending websocket event... ")
+    result = requests.post(websockets_url, json=launch_event)
+    logger.info("Response from websocket service: %s", result)
 
     data = {"message": "New launch added successfully", "id": launch_id}
 
@@ -1085,17 +1124,19 @@ def get_file_by_media_id(media_id):
 def update_project_name():
     params = request.get_json(force=True)
     logger.info("/update_project_name/%s", params)
-    
-    project_name = crud.Update.update_project_name(
-        params.get("id"), params.get("name")
-    )
 
-    data = {"message": "Project name updated successfully", "project_name": project_name}
+    project_name = crud.Update.update_project_name(params.get("id"), params.get("name"))
+
+    data = {
+        "message": "Project name updated successfully",
+        "project_name": project_name,
+    }
 
     resp = jsonify(data)
     resp.status_code = 200
 
     return resp
+
 
 @app.errorhandler(404)
 def notfound(error):
