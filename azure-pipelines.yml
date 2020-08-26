@@ -14,6 +14,8 @@ pool:
 steps:
 
 - script: |
+    curl https://cli-assets.heroku.com/install.sh | sh
+    heroku login
     git checkout $(Build.SourceBranchName)
     git remote add heroku https://heroku:$(heroku_token)@git.heroku.com/delta-core.git
     git push heroku $(Build.SourceBranchName)
