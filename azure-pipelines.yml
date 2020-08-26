@@ -15,6 +15,7 @@ steps:
 
 - script: |
     curl https://cli-assets.heroku.com/install.sh | sh
+    export HEROKU_API_KEY=$HEROKU_TOKEN
     heroku login
     git checkout $(Build.SourceBranchName)
     git remote add heroku https://heroku:$(heroku_token)@git.heroku.com/delta-core.git
