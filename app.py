@@ -678,6 +678,7 @@ def get_tests_history_by_test_run(test_run_id):
             "test_run_id": results[0][0].id,
             "launch_id": results[0][0].launch.id,
             "project_id": results[0][0].launch.project.id,
+            "project_name": results[0][0].launch.project.name,
             "launch": results[0][0].launch.name,
             "test_type": results[0][0].test_type,
             "start_datetime": results[0][0].start_datetime,
