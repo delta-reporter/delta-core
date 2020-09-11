@@ -1070,17 +1070,6 @@ def check_if_more_than_five_failed_in_the_last_ten_runs(test_id):
                 data.append(
                     {
                         "test_history_id": test_history.id,
-                        "start_datetime": test_history.start_datetime,
-                        "end_datetime": test_history.end_datetime,
-                        "duration": diff_dates(
-                            test_history.start_datetime, test_history.end_datetime
-                        ),
-                        "status": test_history.test_status.name,
-                        "resolution": test_history.test_resolution.id,
-                        "trace": test_history.trace,
-                        "message": test_history.message,
-                        "error_type": test_history.error_type,
-                        "media": test_history.media,
                     }
                 )
     else:
@@ -1088,9 +1077,9 @@ def check_if_more_than_five_failed_in_the_last_ten_runs(test_id):
         status = 204
 
     if len(data) >= 5:
-        resp = "flaky"
+        resp = jsonify({"message": "flaky"})
     else:
-        resp = "stable"
+        resp = jsonify({"message": "stable"})
         
     return resp
 
