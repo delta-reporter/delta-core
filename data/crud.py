@@ -662,7 +662,7 @@ class Read:
                     != constants.Constants.test_status["Running"],
                 )
                 .order_by(models.TestHistory.end_datetime.desc())
-                .limit(5)
+                .limit(10)
                 .all()
             )
         except exc.SQLAlchemyError as e:
@@ -671,7 +671,6 @@ class Read:
             test_history = None
 
         return test_history
-
 
 class Update:
     @staticmethod

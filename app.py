@@ -1056,6 +1056,45 @@ def get_test_history_by_test_id(test_id):
     return resp
 
 
+@app.route("/api/v1/check_if_more_than_five_failed_in_the_last_ten_runs/test_id/<int:test_id>", methods=["GET"])
+def check_if_more_than_five_failed_in_the_last_ten_runs(test_id):
+    logger.info("/tests_history_by_test_id/%i", test_id)
+    status = 200
+
+    results = crud.Read.test_history_by_test_id(test_id)
+
+    if results:
+        data = []
+        for test_history in results:
+            if test_history.test_status.name == 'Failed':
+                data.append(
+                    {
+                        "test_history_id": test_history.id,
+                        "start_datetime": test_history.start_datetime,
+                        "end_datetime": test_history.end_datetime,
+                        "duration": diff_dates(
+                            test_history.start_datetime, test_history.end_datetime
+                        ),
+                        "status": test_history.test_status.name,
+                        "resolution": test_history.test_resolution.id,
+                        "trace": test_history.trace,
+                        "message": test_history.message,
+                        "error_type": test_history.error_type,
+                        "media": test_history.media,
+                    }
+                )
+    else:
+        data = {"message": "No history was found"}
+        status = 204
+
+    if len(data) >= 5:
+        resp = "flaky"
+    else:
+        resp = "stable"
+        
+    return resp
+
+
 @app.route("/api/v1/get_file/<int:media_id>", methods=["GET"])
 def get_file_by_media_id(media_id):
     logger.info("/get_file_by_media_id/%i", media_id)
