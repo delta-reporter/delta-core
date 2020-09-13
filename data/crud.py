@@ -770,7 +770,7 @@ class Update:
 
         session_commit()
 
-        return launch.id
+        return launch
 
     @staticmethod
     def add_media_to_test_history(test_history_id, media):

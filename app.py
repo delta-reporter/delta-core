@@ -18,8 +18,6 @@ db = SQLAlchemy(app)
 
 from data import crud
 
-websockets_url = "http://delta_websockets:8080/send_event"
-
 
 @app.route("/")
 def main():
@@ -71,9 +69,7 @@ def create_project():
                 "project_status": params.get("project_status"),
             },
         }
-        logger.info("Sending websocket event... ")
-        result = requests.post(websockets_url, json=project_event)
-        logger.info("Response from websocket service: %s", result)
+        requests.post(app.config.get("WEBSOCKETS_EVENTS_URI"), json=project_event)
     else:
         project_id = project_check.id
         message = "Project recovered successfully"
@@ -163,15 +159,6 @@ def create_launch():
         params.get("name"), params.get("data"), project_id
     )
 
-    # project_event = {
-    #     "event": "delta_project",
-    #     "data": {
-    #         "name": params.get("name"),
-    #         "project_id": project_id,
-    #         "project_status": params.get("project_status"),
-    #     },
-    # }
-
     launch_event = {
         "event": "delta_launch",
         "data": {
@@ -180,13 +167,10 @@ def create_launch():
             "name": params.get("name"),
             "project": params.get("project"),
             "project_id": project_id,
-            "test_run_stats": [],
         },
     }
 
-    logger.info("Sending websocket event... ")
-    result = requests.post(websockets_url, json=launch_event)
-    logger.info("Response from websocket service: %s", result)
+    requests.post(app.config.get("WEBSOCKETS_EVENTS_URI"), json=launch_event)
 
     data = {"message": "New launch added successfully", "id": launch_id}
 
@@ -204,11 +188,24 @@ def finish_launch():
     failed_runs = crud.Read.test_runs_failed_by_launch_id(params.get("launch_id"))
 
     if failed_runs:
-        launch_id = crud.Update.update_launch(params.get("launch_id"), "Failed")
+        launch = crud.Update.update_launch(params.get("launch_id"), "Failed")
     else:
-        launch_id = crud.Update.update_launch(params.get("launch_id"), "Successful")
+        launch = crud.Update.update_launch(params.get("launch_id"), "Successful")
 
-    data = {"message": "Launch updated successfully", "id": launch_id}
+    launch_event = {
+        "event": "delta_launch",
+        "data": {
+            "launch_id": launch.id,
+            "launch_status": launch.launch_status.name,
+            "name": launch.name,
+            "project": launch.project.name,
+            "project_id": launch.project_id,
+        },
+    }
+
+    requests.post(app.config.get("WEBSOCKETS_EVENTS_URI"), json=launch_event)
+
+    data = {"message": "Launch updated successfully", "id": launch.id}
 
     resp = jsonify(data)
     resp.status_code = 200
