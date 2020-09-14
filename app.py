@@ -1,5 +1,6 @@
 import os
 import datetime
+import requests
 from art import text2art
 from dateutil.relativedelta import relativedelta
 from logzero import logger
@@ -53,16 +54,42 @@ def create_project():
     params = request.get_json(force=True)
     logger.info("/projects/%s", params)
 
-    project_check = crud.Read.project_by_name(params["name"])
+    project_check = crud.Read.project_by_name(params.get("name"))
 
     if not project_check:
-        project_id = crud.Create.create_project(params["name"])
+        project_id = crud.Create.create_project(
+            params.get("name"), params.get("project_status")
+        )
         message = "New project added successfully"
+        project_event = {
+            "event": "delta_project",
+            "data": {
+                "name": params.get("name"),
+                "project_id": project_id,
+                "project_status": params.get("project_status"),
+            },
+        }
+        requests.post(app.config.get("WEBSOCKETS_EVENTS_URI"), json=project_event)
     else:
         project_id = project_check.id
         message = "Project recovered successfully"
 
     data = {"message": message, "id": project_id}
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
+
+# This is just a simple approach for deleting a project, not ready for use yet
+@app.route("/api/v1/project/<int:project_id>", methods=["DELETE"])
+def delete_project(project_id):
+    logger.info("/delete_project/%s", project_id)
+
+    message = crud.Delete.delete_project(project_id)
+
+    data = {"message": message}
 
     resp = jsonify(data)
     resp.status_code = 200
@@ -122,16 +149,29 @@ def create_launch():
     params = request.get_json(force=True)
     logger.info("/launches/%s", params)
 
-    project_check = crud.Read.project_by_name(params["project"])
+    project_check = crud.Read.project_by_name(params.get("project"))
 
     if not project_check:
-        project_id = crud.Create.create_project(params["project"])
+        project_id = crud.Create.create_project(params.get("project"))
     else:
         project_id = project_check.id
 
     launch_id = crud.Create.create_launch(
-        params["name"], params.get("data"), project_id
+        params.get("name"), params.get("data"), project_id
     )
+
+    launch_event = {
+        "event": "delta_launch",
+        "data": {
+            "launch_id": launch_id,
+            "launch_status": "In Process",
+            "name": params.get("name"),
+            "project": params.get("project"),
+            "project_id": project_id,
+        },
+    }
+
+    requests.post(app.config.get("WEBSOCKETS_EVENTS_URI"), json=launch_event)
 
     data = {"message": "New launch added successfully", "id": launch_id}
 
@@ -149,11 +189,24 @@ def finish_launch():
     failed_runs = crud.Read.test_runs_failed_by_launch_id(params.get("launch_id"))
 
     if failed_runs:
-        launch_id = crud.Update.update_launch(params.get("launch_id"), "Failed")
+        launch = crud.Update.update_launch(params.get("launch_id"), "Failed")
     else:
-        launch_id = crud.Update.update_launch(params.get("launch_id"), "Successful")
+        launch = crud.Update.update_launch(params.get("launch_id"), "Successful")
 
-    data = {"message": "Launch updated successfully", "id": launch_id}
+    launch_event = {
+        "event": "delta_launch",
+        "data": {
+            "launch_id": launch.id,
+            "launch_status": launch.launch_status.name,
+            "name": launch.name,
+            "project": launch.project.name,
+            "project_id": launch.project_id,
+        },
+    }
+
+    requests.post(app.config.get("WEBSOCKETS_EVENTS_URI"), json=launch_event)
+
+    data = {"message": "Launch updated successfully", "id": launch.id}
 
     resp = jsonify(data)
     resp.status_code = 200
@@ -479,6 +532,7 @@ def get_test_suite(test_suite_id):
 
     return resp
 
+
 @app.route("/api/v1/test_history", methods=["POST"])
 def create_test_history():
     params = request.get_json(force=True)
@@ -566,7 +620,7 @@ def update_test_history_resolution():
     test_history = crud.Update.update_test_history_resolution(
         params.get("test_history_id"), params.get("test_resolution")
     )
-    
+
     test = crud.Update.update_general_test_resolution(
         params.get("test_id"), params.get("test_resolution")
     )
@@ -1097,17 +1151,19 @@ def get_file_by_media_id(media_id):
 def update_project_name():
     params = request.get_json(force=True)
     logger.info("/update_project_name/%s", params)
-    
-    project_name = crud.Update.update_project_name(
-        params.get("id"), params.get("name")
-    )
 
-    data = {"message": "Project name updated successfully", "project_name": project_name}
+    project_name = crud.Update.update_project_name(params.get("id"), params.get("name"))
+
+    data = {
+        "message": "Project name updated successfully",
+        "project_name": project_name,
+    }
 
     resp = jsonify(data)
     resp.status_code = 200
 
     return resp
+
 
 @app.errorhandler(404)
 def notfound(error):

@@ -44,12 +44,13 @@ class Create:
 
         session_commit()
 
-        return
-
     @staticmethod
-    def create_project(name):
+    def create_project(name, status):
         project = models.Project(
-            name=name, project_status_id=constants.Constants.project_status["Active"]
+            name=name,
+            project_status_id=constants.Constants.project_status["Active"]
+            if not status
+            else constants.Constants.project_status[status],
         )
         db.session.add(project)
         session_commit()
@@ -717,7 +718,7 @@ class Update:
         session_commit()
 
         return test_history
-    
+
     @staticmethod
     def update_general_test_resolution(test_id, test_resolution):
         test = db.session.query(models.Test).get(test_id)
@@ -768,7 +769,7 @@ class Update:
 
         session_commit()
 
-        return launch.id
+        return launch
 
     @staticmethod
     def add_media_to_test_history(test_history_id, media):
@@ -782,13 +783,27 @@ class Update:
         session_commit()
 
         return test_history.id
-    
+
     @staticmethod
     def update_project_name(id, name):
         project = db.session.query(models.Project).get(id)
-        if project.name!=name:
+        if project.name != name:
             project.name = name
 
         session_commit()
 
         return project.name
+
+
+class Delete:
+
+    # This is just a simple approach for deleting a project, not ready for use yet
+    @staticmethod
+    def delete_project(project_id):
+        project = db.session.query(models.Project).get(project_id)
+        if project is None:
+            return "Project already deleted"
+        db.session.delete(project)
+        session_commit()
+
+        return "Project deleted successfully"
