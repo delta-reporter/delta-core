@@ -654,7 +654,7 @@ class Read:
         return file_data
 
     @staticmethod
-    def test_history_by_test_id(test_id):
+    def ten_rows_test_history_by_test_id(test_id):
         try:
             test_history = (
                 models.TestHistory.query.filter(
@@ -672,6 +672,24 @@ class Read:
             test_history = None
 
         return test_history
+    
+    @staticmethod
+    def test_id_by_test_history_id(test_history_id):
+        try:
+            test = (
+                models.TestHistory.query.filter(
+                    models.TestHistory.test_history_id == test_history_id,
+                    models.TestHistory.test_status_id
+                    != constants.Constants.test_status["Running"],
+                )
+                .all()
+            )
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            test_history = None
+
+        return test_history.test_id
 
 class Update:
     @staticmethod
@@ -793,6 +811,15 @@ class Update:
         session_commit()
 
         return project.name
+    
+    @staticmethod
+    def update_test_flaky_flag(id, is_flaky):
+        test = db.session.query(models.Test).get(id)
+        test.is_flaky = is_flaky
+
+        session_commit()
+
+        return test
 
 
 class Delete:

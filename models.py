@@ -149,7 +149,8 @@ class Test(db.Model):
     test_resolution_id = db.Column(
         db.Integer, db.ForeignKey("test_resolution.id"), nullable=False
     )
-        
+    is_flaky = db.Column(db.String(300))
+    
     def __repr__(self):
         return "<Test {}>".format(self.name)
 

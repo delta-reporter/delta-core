@@ -1,6 +1,6 @@
 import os
 import datetime
-import requests
+# import requests
 from art import text2art
 from dateutil.relativedelta import relativedelta
 from logzero import logger
@@ -604,6 +604,22 @@ def update_test_history():
         params.get("test_status"),
     )
 
+    # identifying if test is flaky
+    test_id = crud.Read.test_id_by_test_history_id(params.get("test_history_id"))
+    latest_runs_by_test_id = crud.Read.ten_rows_test_history_by_test_id(test_id)
+    if latest_runs_by_test_id:
+        flaky_tests = []
+        flaky = "false"
+        for flaky_test_history in latest_runs_by_test_id:
+            if flaky_test_history.test_status.name == "Failed":
+                flaky_tests.append({"test_history_id": flaky_test_history.id})
+        if len(flaky_tests) > 5:
+            crud.Update.update_test_flaky_flag(test_id, "true")
+        else:
+            crud.Update.update_test_flaky_flag(test_id, "false")
+    else:
+        crud.Update.update_test_flaky_flag(test_id, "false") 
+    
     data = {"message": "Test history updated successfully"}
 
     resp = jsonify(data)
@@ -798,6 +814,7 @@ def get_tests_history_by_test_run(test_run_id):
                     "test_resolution": test_history.test.test_resolution_id,
                     "parameters": test_history.parameters,
                     "media": test_history.media,
+                    "is_flaky": test_history.test.is_flaky,
                 }
             )
         test_run["test_suites"] = test_suites
@@ -877,19 +894,6 @@ def get_tests_history_by_test_status_and_test_run_id(test_statuses_ids, test_run
                         "tests": [],
                     }
                 )
-            # identifying if test is flaky
-            latest_runs_by_test_id = crud.Read.test_history_by_test_id(
-                test_history.test.id
-            )
-            if latest_runs_by_test_id:
-                flaky_tests = []
-                flaky = "false"
-                for flaky_test_history in latest_runs_by_test_id:
-                    if flaky_test_history.test_status.name == "Failed":
-                        flaky_tests.append({"test_history_id": flaky_test_history.id})
-            if len(flaky_tests) > 5:
-                flaky = "true"
-
             test_suites[test_suites_index.get(test_suite_history.id)]["tests"].append(
                 {
                     "test_history_id": test_history.id,
@@ -910,7 +914,6 @@ def get_tests_history_by_test_status_and_test_run_id(test_statuses_ids, test_run
                     "test_resolution": test_history.test.test_resolution_id,
                     "parameters": test_history.parameters,
                     "media": test_history.media,
-                    "flaky": flaky,
                 }
             )
         test_run["test_suites"] = test_suites
@@ -1093,7 +1096,7 @@ def get_test_history_by_test_id(test_id):
     logger.info("/tests_history_by_test_id/%i", test_id)
     status = 200
 
-    results = crud.Read.test_history_by_test_id(test_id)
+    results = crud.Read.ten_rows_test_history_by_test_id(test_id)
 
     if results:
         data = []
@@ -1122,35 +1125,6 @@ def get_test_history_by_test_id(test_id):
     resp.status_code = status
 
     return resp
-
-
-# @app.route(
-#     "/api/v1/check_if_more_than_five_failed_in_the_last_ten_runs/test_id/<int:test_id>",
-#     methods=["GET"],
-# )
-# def check_if_more_than_five_failed_in_the_last_ten_runs(test_id):
-#     logger.info("/tests_history_by_test_id/%i", test_id)
-#     status = 200
-
-#     results = crud.Read.test_history_by_test_id(test_id)
-
-#     if results:
-#         data = []
-#         for test_history in results:
-#             if test_history.test_status.name == "Failed":
-#                 data.append({"test_history_id": test_history.id})
-#     else:
-#         data = {"message": "No history was found"}
-#         status = 204
-
-#     if len(data) >= 5:
-#         resp = jsonify({"message": "flaky"})
-#     else:
-#         resp = jsonify({"message": "stable"})
-
-#     resp.status_code = status
-#     return resp
-
 
 @app.route("/api/v1/get_file/<int:media_id>", methods=["GET"])
 def get_file_by_media_id(media_id):
