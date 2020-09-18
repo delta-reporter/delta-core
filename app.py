@@ -1130,7 +1130,7 @@ def get_test_history_by_test_id(test_id):
 )
 def check_if_more_than_five_failed_in_the_last_ten_runs(test_id):
     logger.info("/tests_history_by_test_id/%i", test_id)
-    # status = 200
+    status = 200
 
     results = crud.Read.test_history_by_test_id(test_id)
 
@@ -1141,13 +1141,14 @@ def check_if_more_than_five_failed_in_the_last_ten_runs(test_id):
                 data.append({"test_history_id": test_history.id})
     else:
         data = {"message": "No history was found"}
-        # status = 204
+        status = 204
 
     if len(data) >= 5:
         resp = jsonify({"message": "flaky"})
     else:
         resp = jsonify({"message": "stable"})
 
+    resp.status_code = status
     return resp
 
 
