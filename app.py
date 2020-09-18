@@ -1,6 +1,6 @@
 import os
 import datetime
-# import requests
+import requests
 from art import text2art
 from dateutil.relativedelta import relativedelta
 from logzero import logger
@@ -609,7 +609,6 @@ def update_test_history():
     latest_runs_by_test_id = crud.Read.ten_rows_test_history_by_test_id(test_id)
     if latest_runs_by_test_id:
         flaky_tests = []
-        flaky = "false"
         for flaky_test_history in latest_runs_by_test_id:
             if flaky_test_history.test_status.name == "Failed":
                 flaky_tests.append({"test_history_id": flaky_test_history.id})
@@ -618,8 +617,8 @@ def update_test_history():
         else:
             crud.Update.update_test_flaky_flag(test_id, "false")
     else:
-        crud.Update.update_test_flaky_flag(test_id, "false") 
-    
+        crud.Update.update_test_flaky_flag(test_id, "false")
+
     data = {"message": "Test history updated successfully"}
 
     resp = jsonify(data)
@@ -1125,6 +1124,7 @@ def get_test_history_by_test_id(test_id):
     resp.status_code = status
 
     return resp
+
 
 @app.route("/api/v1/get_file/<int:media_id>", methods=["GET"])
 def get_file_by_media_id(media_id):
