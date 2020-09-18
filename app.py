@@ -594,7 +594,7 @@ def update_test_history():
     params = request.get_json(force=True)
     logger.info("/update_test_history/%s", params)
 
-    crud.Update.update_test_history(
+    test_updated = crud.Update.update_test_history(
         params.get("test_history_id"),
         params.get("end_datetime"),
         params.get("trace"),
@@ -605,8 +605,7 @@ def update_test_history():
     )
 
     # identifying if test is flaky
-    test_id = crud.Read.test_id_by_test_history_id(params.get("test_history_id"))
-    latest_runs_by_test_id = crud.Read.ten_rows_test_history_by_test_id(test_id)
+    latest_runs_by_test_id = crud.Read.test_history_by_test_id(test_updated.test_id)
     if latest_runs_by_test_id:
         flaky_tests = []
         for flaky_test_history in latest_runs_by_test_id:
@@ -1095,7 +1094,7 @@ def get_test_history_by_test_id(test_id):
     logger.info("/tests_history_by_test_id/%i", test_id)
     status = 200
 
-    results = crud.Read.ten_rows_test_history_by_test_id(test_id)
+    results = crud.Read.test_history_by_test_id(test_id)
 
     if results:
         data = []
