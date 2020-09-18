@@ -877,6 +877,19 @@ def get_tests_history_by_test_status_and_test_run_id(test_statuses_ids, test_run
                         "tests": [],
                     }
                 )
+            # identifying if test is flaky
+            latest_runs_by_test_id = crud.Read.test_history_by_test_id(
+                test_history.test.id
+            )
+            if latest_runs_by_test_id:
+                flaky_tests = []
+                flaky = "false"
+                for flaky_test_history in latest_runs_by_test_id:
+                    if flaky_test_history.test_status.name == "Failed":
+                        flaky_tests.append({"test_history_id": flaky_test_history.id})
+            if len(flaky_tests) > 5:
+                flaky = "true"
+
             test_suites[test_suites_index.get(test_suite_history.id)]["tests"].append(
                 {
                     "test_history_id": test_history.id,
@@ -897,6 +910,7 @@ def get_tests_history_by_test_status_and_test_run_id(test_statuses_ids, test_run
                     "test_resolution": test_history.test.test_resolution_id,
                     "parameters": test_history.parameters,
                     "media": test_history.media,
+                    "flaky": flaky,
                 }
             )
         test_run["test_suites"] = test_suites
@@ -1110,31 +1124,30 @@ def get_test_history_by_test_id(test_id):
     return resp
 
 
-@app.route("/api/v1/check_if_more_than_five_failed_in_the_last_ten_runs/test_id/<int:test_id>", methods=["GET"])
+@app.route(
+    "/api/v1/check_if_more_than_five_failed_in_the_last_ten_runs/test_id/<int:test_id>",
+    methods=["GET"],
+)
 def check_if_more_than_five_failed_in_the_last_ten_runs(test_id):
     logger.info("/tests_history_by_test_id/%i", test_id)
-    status = 200
+    # status = 200
 
     results = crud.Read.test_history_by_test_id(test_id)
 
     if results:
         data = []
         for test_history in results:
-            if test_history.test_status.name == 'Failed':
-                data.append(
-                    {
-                        "test_history_id": test_history.id,
-                    }
-                )
+            if test_history.test_status.name == "Failed":
+                data.append({"test_history_id": test_history.id})
     else:
         data = {"message": "No history was found"}
-        status = 204
+        # status = 204
 
     if len(data) >= 5:
         resp = jsonify({"message": "flaky"})
     else:
         resp = jsonify({"message": "stable"})
-        
+
     return resp
 
 
