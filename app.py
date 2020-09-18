@@ -1124,32 +1124,32 @@ def get_test_history_by_test_id(test_id):
     return resp
 
 
-@app.route(
-    "/api/v1/check_if_more_than_five_failed_in_the_last_ten_runs/test_id/<int:test_id>",
-    methods=["GET"],
-)
-def check_if_more_than_five_failed_in_the_last_ten_runs(test_id):
-    logger.info("/tests_history_by_test_id/%i", test_id)
-    status = 200
+# @app.route(
+#     "/api/v1/check_if_more_than_five_failed_in_the_last_ten_runs/test_id/<int:test_id>",
+#     methods=["GET"],
+# )
+# def check_if_more_than_five_failed_in_the_last_ten_runs(test_id):
+#     logger.info("/tests_history_by_test_id/%i", test_id)
+#     status = 200
 
-    results = crud.Read.test_history_by_test_id(test_id)
+#     results = crud.Read.test_history_by_test_id(test_id)
 
-    if results:
-        data = []
-        for test_history in results:
-            if test_history.test_status.name == "Failed":
-                data.append({"test_history_id": test_history.id})
-    else:
-        data = {"message": "No history was found"}
-        status = 204
+#     if results:
+#         data = []
+#         for test_history in results:
+#             if test_history.test_status.name == "Failed":
+#                 data.append({"test_history_id": test_history.id})
+#     else:
+#         data = {"message": "No history was found"}
+#         status = 204
 
-    if len(data) >= 5:
-        resp = jsonify({"message": "flaky"})
-    else:
-        resp = jsonify({"message": "stable"})
+#     if len(data) >= 5:
+#         resp = jsonify({"message": "flaky"})
+#     else:
+#         resp = jsonify({"message": "stable"})
 
-    resp.status_code = status
-    return resp
+#     resp.status_code = status
+#     return resp
 
 
 @app.route("/api/v1/get_file/<int:media_id>", methods=["GET"])
