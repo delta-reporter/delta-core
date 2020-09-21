@@ -673,6 +673,7 @@ class Read:
 
         return test_history
 
+
 class Update:
     @staticmethod
     def update_test_history(
@@ -688,7 +689,7 @@ class Update:
 
         session_commit()
 
-        return test_history.id
+        return test_history
 
     @staticmethod
     def increase_test_history_retry(test_history_id):
@@ -793,6 +794,15 @@ class Update:
         session_commit()
 
         return project.name
+
+    @staticmethod
+    def update_test_flaky_flag(id, is_flaky):
+        test = db.session.query(models.Test).get(id)
+        test.is_flaky = is_flaky
+
+        session_commit()
+
+        return test
 
 
 class Delete:
