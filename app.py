@@ -625,6 +625,17 @@ def update_test_history_resolution():
         params.get("test_id"), params.get("test_resolution")
     )
 
+    resolution_event = {
+        "event": "delta_resolution",
+        "data": {
+            "test_history_resolution": test_history.test_resolution_id,
+            "test_resolution": test.test_resolution_id,
+            "test_history_id": test_history.id,
+            "test_id": test.id,
+        },
+    }
+    requests.post(app.config.get("WEBSOCKETS_EVENTS_URI"), json=resolution_event)
+
     data = {
         "message": "Test history resolution updated successfully",
         "resolution": test_history.test_resolution_id,
@@ -1110,7 +1121,10 @@ def get_test_history_by_test_id(test_id):
     return resp
 
 
-@app.route("/api/v1/check_if_more_than_five_failed_in_the_last_ten_runs/test_id/<int:test_id>", methods=["GET"])
+@app.route(
+    "/api/v1/check_if_more_than_five_failed_in_the_last_ten_runs/test_id/<int:test_id>",
+    methods=["GET"],
+)
 def check_if_more_than_five_failed_in_the_last_ten_runs(test_id):
     logger.info("/tests_history_by_test_id/%i", test_id)
     status = 200
@@ -1120,12 +1134,8 @@ def check_if_more_than_five_failed_in_the_last_ten_runs(test_id):
     if results:
         data = []
         for test_history in results:
-            if test_history.test_status.name == 'Failed':
-                data.append(
-                    {
-                        "test_history_id": test_history.id,
-                    }
-                )
+            if test_history.test_status.name == "Failed":
+                data.append({"test_history_id": test_history.id})
     else:
         data = {"message": "No history was found"}
         status = 204
@@ -1134,7 +1144,9 @@ def check_if_more_than_five_failed_in_the_last_ten_runs(test_id):
         resp = jsonify({"message": "flaky"})
     else:
         resp = jsonify({"message": "stable"})
-        
+
+    resp.status_code = status
+
     return resp
 
 
