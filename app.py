@@ -639,6 +639,17 @@ def update_test_history_resolution():
         params.get("test_id"), params.get("test_resolution")
     )
 
+    resolution_event = {
+        "event": "delta_resolution",
+        "data": {
+            "test_history_resolution": test_history.test_resolution_id,
+            "test_resolution": test.test_resolution_id,
+            "test_history_id": test_history.id,
+            "test_id": test.id,
+        },
+    }
+    requests.post(app.config.get("WEBSOCKETS_EVENTS_URI"), json=resolution_event)
+
     data = {
         "message": "Test history resolution updated successfully",
         "resolution": test_history.test_resolution_id,
@@ -1123,7 +1134,6 @@ def get_test_history_by_test_id(test_id):
     resp.status_code = status
 
     return resp
-
 
 @app.route("/api/v1/get_file/<int:media_id>", methods=["GET"])
 def get_file_by_media_id(media_id):
