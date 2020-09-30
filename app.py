@@ -612,12 +612,13 @@ def update_test_history():
             if flaky_test_history.test_status.name == "Failed":
                 flaky_tests.append({"test_history_id": flaky_test_history.id})
         if len(flaky_tests) > 5:
-            crud.Update.update_test_flaky_flag(test_updated.test_id, "true")
+            crud.Update.update_test_flaky_flag(test_updated.test_id, true)
+            logger.info("setting flaky test %s", flaky_test_history.id)
         else:
-            crud.Update.update_test_flaky_flag(test_updated.test_id, "false")
+            crud.Update.update_test_flaky_flag(test_updated.test_id, false)
     else:
-        crud.Update.update_test_flaky_flag(test_updated.test_id, "false")
-
+        crud.Update.update_test_flaky_flag(test_updated.test_id, false)
+    
     data = {"message": "Test history updated successfully"}
 
     resp = jsonify(data)
