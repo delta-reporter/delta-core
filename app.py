@@ -806,8 +806,8 @@ def get_tests_history_by_test_run(test_run_id):
             test_suites[test_suites_index.get(test_suite_history.id)]["tests"].append(
                 {
                     "test_history_id": test_history.id,
-                    "test_id": test_history.test.id,
-                    "name": test_history.test.name,
+                    "mother_test_id": test_history.mother_test_id,
+                    "name": test_history.mother_test.name,
                     "trace": test_history.trace,
                     "file": test_history.file,
                     "message": test_history.message,
@@ -820,10 +820,10 @@ def get_tests_history_by_test_run(test_run_id):
                     ),
                     "status": test_history.test_status.name,
                     "test_history_resolution": test_history.test_resolution.id,
-                    "test_resolution": test_history.test.test_resolution_id,
+                    "test_resolution": test_history.mother_test.test_resolution_id,
                     "parameters": test_history.parameters,
                     "media": test_history.media,
-                    "is_flaky": test_history.test.is_flaky,
+                    "is_flaky": test_history.mother_test.is_flaky,
                 }
             )
         test_run["test_suites"] = test_suites
@@ -906,8 +906,8 @@ def get_tests_history_by_test_status_and_test_run_id(test_statuses_ids, test_run
             test_suites[test_suites_index.get(test_suite_history.id)]["tests"].append(
                 {
                     "test_history_id": test_history.id,
-                    "test_id": test_history.test.id,
-                    "name": test_history.test.name,
+                    "mother_test_id": test_history.mother_test_id,
+                    "name": test_history.mother_test.name,
                     "trace": test_history.trace,
                     "file": test_history.file,
                     "message": test_history.message,
@@ -920,7 +920,7 @@ def get_tests_history_by_test_status_and_test_run_id(test_statuses_ids, test_run
                     ),
                     "status": test_history.test_status.name,
                     "test_history_resolution": test_history.test_resolution.id,
-                    "test_resolution": test_history.test.test_resolution_id,
+                    "test_resolution": test_history.mother_test.test_resolution_id,
                     "parameters": test_history.parameters,
                     "media": test_history.media,
                 }
@@ -948,7 +948,7 @@ def get_tests_history_by_test_status_id(test_status_id):
             data.append(
                 {
                     "test_history_id": test_history.id,
-                    "name": test_history.test.name,
+                    "name": test_history.mother_test.name,
                     "start_datetime": test_history.start_datetime,
                     "end_datetime": test_history.end_datetime,
                     "duration": diff_dates(
@@ -982,7 +982,7 @@ def get_tests_history_by_test_resolution_id(test_resolution_id):
             data.append(
                 {
                     "test_history_id": test_history.id,
-                    "name": test_history.test.name,
+                    "name": test_history.mother_test.name,
                     "start_datetime": test_history.start_datetime,
                     "end_datetime": test_history.end_datetime,
                     "duration": diff_dates(

@@ -120,7 +120,7 @@ class Create:
     def create_test_history(
         start_datetime, test_id, test_run_id, test_suite_history_id, parameters, status
     ):
-        test_history = models.TestHistory(
+        test_history = models.Test(
             start_datetime=start_datetime,
             test_id=test_id,
             test_status_id=constants.Constants.test_status["Running"]
@@ -387,7 +387,7 @@ class Read:
     @staticmethod
     def test_by_name(test_name):
         try:
-            test = models.Test.query.filter_by(name=test_name).first()
+            test = models.MotherTest.query.filter_by(name=test_name).first()
         except exc.SQLAlchemyError as e:
             logger.error(e)
             db.session.rollback()
@@ -435,7 +435,7 @@ class Read:
     @staticmethod
     def test_history_by_test_id_and_test_run_id(test_id, test_run_id):
         try:
-            test_history = models.TestHistory.query.filter_by(
+            test_history = models.Test.query.filter_by(
                 test_id=test_id, test_run_id=test_run_id
             ).first()
         except exc.SQLAlchemyError as e:
@@ -455,7 +455,7 @@ class Read:
                 db.session.query(
                     models.TestRun,
                     models.TestSuiteHistory,
-                    models.TestHistory,
+                    models.Test,
                     t_counts.total_tests_by_test_suite_history_id.c.tests_count,
                     t_counts.failed_tests_by_test_suite_history_id.c.failed_tests_count,
                     t_counts.passed_tests_by_test_suite_history_id.c.passed_tests_count,
@@ -494,14 +494,8 @@ class Read:
                     == t_counts.skipped_tests_by_test_suite_history_id.c.test_suite_history_id,
                 )
                 .filter(models.TestRun.id == models.TestSuiteHistory.test_run_id)
-                .filter(
-                    models.TestSuiteHistory.test_run_id
-                    == models.TestHistory.test_run_id
-                )
-                .filter(
-                    models.TestSuiteHistory.id
-                    == models.TestHistory.test_suite_history_id
-                )
+                .filter(models.TestSuiteHistory.test_run_id == models.Test.test_run_id)
+                .filter(models.TestSuiteHistory.id == models.Test.test_suite_history_id)
                 .filter(models.TestRun.id == test_run_id)
                 .all()
             )
@@ -529,7 +523,7 @@ class Read:
                 db.session.query(
                     models.TestRun,
                     models.TestSuiteHistory,
-                    models.TestHistory,
+                    models.Test,
                     t_counts.total_tests_by_test_suite_history_id.c.tests_count,
                     t_counts.failed_tests_by_test_suite_history_id.c.failed_tests_count,
                     t_counts.passed_tests_by_test_suite_history_id.c.passed_tests_count,
@@ -568,16 +562,10 @@ class Read:
                     == t_counts.skipped_tests_by_test_suite_history_id.c.test_suite_history_id,
                 )
                 .filter(models.TestRun.id == models.TestSuiteHistory.test_run_id)
-                .filter(
-                    models.TestSuiteHistory.test_run_id
-                    == models.TestHistory.test_run_id
-                )
-                .filter(
-                    models.TestSuiteHistory.id
-                    == models.TestHistory.test_suite_history_id
-                )
+                .filter(models.TestSuiteHistory.test_run_id == models.Test.test_run_id)
+                .filter(models.TestSuiteHistory.id == models.Test.test_suite_history_id)
                 .filter(models.TestRun.id == test_run_id)
-                .filter(models.TestHistory.test_status_id.in_(array_of_statuses))
+                .filter(models.Test.test_status_id.in_(array_of_statuses))
                 .all()
             )
         except exc.SQLAlchemyError as e:
@@ -590,7 +578,7 @@ class Read:
     @staticmethod
     def test_history_by_test_status_id(test_status_id):
         try:
-            test_history = models.TestHistory.query.filter_by(
+            test_history = models.Test.query.filter_by(
                 test_status_id=test_status_id
             ).all()
         except exc.SQLAlchemyError as e:
@@ -603,7 +591,7 @@ class Read:
     @staticmethod
     def test_history_by_test_resolution_id(test_resolution_id):
         try:
-            test_history = models.TestHistory.query.filter_by(
+            test_history = models.Test.query.filter_by(
                 test_resolution_id=test_resolution_id
             ).all()
         except exc.SQLAlchemyError as e:
@@ -617,10 +605,10 @@ class Read:
     def test_history_by_test_suite_id(test_suite_id):
         try:
             test_history = (
-                db.session.query(models.TestHistory, models.Test, models.TestSuite)
-                .filter(models.Test.test_suite_id == models.TestSuite.id)
-                .filter(models.TestHistory.test_id == models.Test.id)
-                .filter(models.Test.test_suite_id == test_suite_id)
+                db.session.query(models.Test, models.Test, models.TestSuite)
+                .filter(models.MotherTest.test_suite_id == models.TestSuite.id)
+                .filter(models.Test.test_id == models.MotherTest.id)
+                .filter(models.MotherTest.test_suite_id == test_suite_id)
                 .all()
             )
         except exc.SQLAlchemyError as e:
@@ -657,12 +645,12 @@ class Read:
     def test_history_by_test_id(test_id):
         try:
             test_history = (
-                models.TestHistory.query.filter(
-                    models.TestHistory.test_id == test_id,
-                    models.TestHistory.test_status_id
+                models.Test.query.filter(
+                    models.Test.mother_test_id == test_id,
+                    models.Test.test_status_id
                     != constants.Constants.test_status["Running"],
                 )
-                .order_by(models.TestHistory.end_datetime.desc())
+                .order_by(models.Test.end_datetime.desc())
                 .limit(10)
                 .all()
             )
@@ -679,7 +667,7 @@ class Update:
     def update_test_history(
         test_history_id, end_datetime, trace, file, message, error_type, test_status,
     ):
-        test_history = db.session.query(models.TestHistory).get(test_history_id)
+        test_history = db.session.query(models.Test).get(test_history_id)
         test_history.end_datetime = end_datetime
         test_history.trace = trace
         test_history.file = file
@@ -693,7 +681,7 @@ class Update:
 
     @staticmethod
     def increase_test_history_retry(test_history_id):
-        test_history = db.session.query(models.TestHistory).get(test_history_id)
+        test_history = db.session.query(models.Test).get(test_history_id)
 
         test_history.retries = (
             1 if test_history.retries is None else test_history.retries + 1
@@ -705,13 +693,13 @@ class Update:
 
     @staticmethod
     def clean_test_history_media(test_history_id):
-        test_history = db.session.query(models.TestHistory).get(test_history_id)
+        test_history = db.session.query(models.Test).get(test_history_id)
         test_history.media = None
         session_commit()
 
     @staticmethod
     def update_test_history_resolution(test_history_id, test_resolution):
-        test_history = db.session.query(models.TestHistory).get(test_history_id)
+        test_history = db.session.query(models.Test).get(test_history_id)
         test_history.test_resolution_id = constants.Constants.test_resolution.get(
             test_resolution
         )
@@ -721,8 +709,9 @@ class Update:
         return test_history
 
     @staticmethod
-    def update_general_test_resolution(test_id, test_resolution):
-        test = db.session.query(models.Test).get(test_id)
+    def update_general_test_resolution(mother_test_id, test_resolution):
+        # WIP: Object is return as None requires check
+        test = db.session.query(models.Test).get(mother_test_id)
         test.test_resolution_id = constants.Constants.test_resolution.get(
             test_resolution
         )
@@ -774,7 +763,7 @@ class Update:
 
     @staticmethod
     def add_media_to_test_history(test_history_id, media):
-        test_history = db.session.query(models.TestHistory).get(test_history_id)
+        test_history = db.session.query(models.Test).get(test_history_id)
 
         if test_history.media:
             test_history.media.append(media)
