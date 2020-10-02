@@ -122,7 +122,7 @@ class Create:
     ):
         test_history = models.Test(
             start_datetime=start_datetime,
-            test_id=test_id,
+            mother_test_id=test_id,
             test_status_id=constants.Constants.test_status["Running"]
             if not status
             else constants.Constants.test_status[status],
@@ -139,7 +139,7 @@ class Create:
     @staticmethod
     def create_test_retry(**kwargs):
         test_retry = models.TestRetries(
-            test_history_id=kwargs.get("test_history_id"),
+            test_id=kwargs.get("test_history_id"),
             retry_count=kwargs.get("retry_count"),
             start_datetime=kwargs.get("start_datetime"),
             end_datetime=kwargs.get("end_datetime"),
@@ -436,7 +436,7 @@ class Read:
     def test_history_by_test_id_and_test_run_id(test_id, test_run_id):
         try:
             test_history = models.Test.query.filter_by(
-                test_id=test_id, test_run_id=test_run_id
+                mother_test_id=test_id, test_run_id=test_run_id
             ).first()
         except exc.SQLAlchemyError as e:
             logger.error(e)
@@ -698,8 +698,8 @@ class Update:
         session_commit()
 
     @staticmethod
-    def update_test_history_resolution(test_history_id, test_resolution):
-        test_history = db.session.query(models.Test).get(test_history_id)
+    def update_test_history_resolution(test_id, test_resolution):
+        test_history = db.session.query(models.Test).get(test_id)
         test_history.test_resolution_id = constants.Constants.test_resolution.get(
             test_resolution
         )
@@ -710,8 +710,7 @@ class Update:
 
     @staticmethod
     def update_general_test_resolution(mother_test_id, test_resolution):
-        # WIP: Object is return as None requires check
-        test = db.session.query(models.Test).get(mother_test_id)
+        test = db.session.query(models.MotherTest).get(mother_test_id)
         test.test_resolution_id = constants.Constants.test_resolution.get(
             test_resolution
         )
@@ -786,7 +785,7 @@ class Update:
 
     @staticmethod
     def update_test_flaky_flag(id, is_flaky):
-        test = db.session.query(models.Test).get(id)
+        test = db.session.query(models.MotherTest).get(id)
         test.is_flaky = is_flaky
 
         session_commit()
