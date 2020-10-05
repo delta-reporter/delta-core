@@ -137,8 +137,8 @@ class TestSuiteStatus(db.Model):
         return "<TestSuiteStatus {}>".format(self.name)
 
 
-class Test(db.Model):
-    __tablename__ = "test"
+class MotherTest(db.Model):
+    __tablename__ = "mother_test"
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(300), nullable=False)
@@ -150,13 +150,13 @@ class Test(db.Model):
         db.Integer, db.ForeignKey("test_resolution.id"), nullable=False
     )
     is_flaky = db.Column(db.Boolean())
-    
+
     def __repr__(self):
-        return "<Test {}>".format(self.name)
+        return "<MotherTest {}>".format(self.name)
 
 
-class TestHistory(db.Model):
-    __tablename__ = "test_history"
+class Test(db.Model):
+    __tablename__ = "test"
 
     id = db.Column(db.Integer, primary_key=True)
     start_datetime = db.Column(db.DateTime)
@@ -168,8 +168,12 @@ class TestHistory(db.Model):
     retries = db.Column(db.Integer)
     parameters = db.Column(db.String(3000))
     media = db.Column(MutableList.as_mutable(db.JSON))
-    test_id = db.Column(db.Integer, db.ForeignKey("test.id"), nullable=False)
-    test = db.relationship("Test", backref=db.backref("test", lazy=True))
+    mother_test_id = db.Column(
+        db.Integer, db.ForeignKey("mother_test.id"), nullable=False
+    )
+    mother_test = db.relationship(
+        "MotherTest", backref=db.backref("mother_test", lazy=True)
+    )
     test_status_id = db.Column(
         db.Integer, db.ForeignKey("test_status.id"), nullable=False
     )
@@ -188,7 +192,7 @@ class TestHistory(db.Model):
     )
 
     def __repr__(self):
-        return "<TestHistory {}>".format(self.id)
+        return "<Test {}>".format(self.id)
 
 
 class TestStatus(db.Model):
@@ -215,9 +219,7 @@ class TestRetries(db.Model):
     __tablename__ = "test_retries"
 
     id = db.Column(db.Integer, primary_key=True)
-    test_history_id = db.Column(
-        db.Integer, db.ForeignKey("test_history.id"), nullable=False
-    )
+    test_id = db.Column(db.Integer, db.ForeignKey("test.id"), nullable=False)
     retry_count = db.Column(db.Integer)
     start_datetime = db.Column(db.DateTime)
     end_datetime = db.Column(db.DateTime)

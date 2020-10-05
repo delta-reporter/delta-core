@@ -605,19 +605,20 @@ def update_test_history():
     )
 
     # identifying if test is flaky
-    latest_runs_by_test_id = crud.Read.test_history_by_test_id(test_updated.test_id)
+    latest_runs_by_test_id = crud.Read.test_history_by_test_id(
+        test_updated.mother_test_id
+    )
     if latest_runs_by_test_id:
         flaky_tests = []
         for flaky_test_history in latest_runs_by_test_id:
             if flaky_test_history.test_status.name == "Failed":
                 flaky_tests.append({"test_history_id": flaky_test_history.id})
         if len(flaky_tests) > 5:
-            crud.Update.update_test_flaky_flag(test_updated.test_id, True)
-            logger.info("setting flaky test %s", flaky_test_history.id)
+            crud.Update.update_test_flaky_flag(test_updated.mother_test_id, True)
         else:
-            crud.Update.update_test_flaky_flag(test_updated.test_id, False)
+            crud.Update.update_test_flaky_flag(test_updated.mother_test_id, False)
     else:
-        crud.Update.update_test_flaky_flag(test_updated.test_id, False)
+        crud.Update.update_test_flaky_flag(test_updated.mother_test_id, False)
 
     data = {"message": "Test history updated successfully"}
 
@@ -632,30 +633,30 @@ def update_test_history_resolution():
     params = request.get_json(force=True)
     logger.info("/update_test_history_resolution/%s", params)
 
-    test_history = crud.Update.update_test_history_resolution(
-        params.get("test_history_id"), params.get("test_resolution")
+    test = crud.Update.update_test_history_resolution(
+        params.get("test_id"), params.get("test_resolution")
     )
 
-    test = crud.Update.update_general_test_resolution(
-        params.get("test_id"), params.get("test_resolution")
+    mother_test = crud.Update.update_general_test_resolution(
+        params.get("mother_test_id"), params.get("test_resolution")
     )
 
     resolution_event = {
         "event": "delta_resolution",
         "data": {
-            "test_history_resolution": test_history.test_resolution_id,
-            "test_resolution": test.test_resolution_id,
-            "test_history_id": test_history.id,
+            "test_history_resolution": test.test_resolution_id,
+            "test_resolution": mother_test.test_resolution_id,
             "test_id": test.id,
+            "mother_test_id": mother_test.id,
         },
     }
     requests.post(app.config.get("WEBSOCKETS_EVENTS_URI"), json=resolution_event)
 
     data = {
         "message": "Test history resolution updated successfully",
-        "resolution": test_history.test_resolution_id,
-        "test_history_id": test_history.id,
+        "resolution": test.test_resolution_id,
         "test_id": test.id,
+        "mother_test_id": mother_test.id,
     }
 
     resp = jsonify(data)
@@ -806,9 +807,9 @@ def get_tests_history_by_test_run(test_run_id):
                 )
             test_suites[test_suites_index.get(test_suite_history.id)]["tests"].append(
                 {
-                    "test_history_id": test_history.id,
-                    "test_id": test_history.test.id,
-                    "name": test_history.test.name,
+                    "test_id": test_history.id,
+                    "mother_test_id": test_history.mother_test_id,
+                    "name": test_history.mother_test.name,
                     "trace": test_history.trace,
                     "file": test_history.file,
                     "message": test_history.message,
@@ -821,10 +822,10 @@ def get_tests_history_by_test_run(test_run_id):
                     ),
                     "status": test_history.test_status.name,
                     "test_history_resolution": test_history.test_resolution.id,
-                    "test_resolution": test_history.test.test_resolution_id,
+                    "test_resolution": test_history.mother_test.test_resolution_id,
                     "parameters": test_history.parameters,
                     "media": test_history.media,
-                    "is_flaky": test_history.test.is_flaky,
+                    "is_flaky": test_history.mother_test.is_flaky,
                 }
             )
         test_run["test_suites"] = test_suites
@@ -906,9 +907,9 @@ def get_tests_history_by_test_status_and_test_run_id(test_statuses_ids, test_run
                 )
             test_suites[test_suites_index.get(test_suite_history.id)]["tests"].append(
                 {
-                    "test_history_id": test_history.id,
-                    "test_id": test_history.test.id,
-                    "name": test_history.test.name,
+                    "test_id": test_history.id,
+                    "mother_test_id": test_history.mother_test_id,
+                    "name": test_history.mother_test.name,
                     "trace": test_history.trace,
                     "file": test_history.file,
                     "message": test_history.message,
@@ -921,7 +922,7 @@ def get_tests_history_by_test_status_and_test_run_id(test_statuses_ids, test_run
                     ),
                     "status": test_history.test_status.name,
                     "test_history_resolution": test_history.test_resolution.id,
-                    "test_resolution": test_history.test.test_resolution_id,
+                    "test_resolution": test_history.mother_test.test_resolution_id,
                     "parameters": test_history.parameters,
                     "media": test_history.media,
                 }
@@ -949,7 +950,7 @@ def get_tests_history_by_test_status_id(test_status_id):
             data.append(
                 {
                     "test_history_id": test_history.id,
-                    "name": test_history.test.name,
+                    "name": test_history.mother_test.name,
                     "start_datetime": test_history.start_datetime,
                     "end_datetime": test_history.end_datetime,
                     "duration": diff_dates(
@@ -983,7 +984,7 @@ def get_tests_history_by_test_resolution_id(test_resolution_id):
             data.append(
                 {
                     "test_history_id": test_history.id,
-                    "name": test_history.test.name,
+                    "name": test_history.mother_test.name,
                     "start_datetime": test_history.start_datetime,
                     "end_datetime": test_history.end_datetime,
                     "duration": diff_dates(
