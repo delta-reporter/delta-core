@@ -622,6 +622,16 @@ def update_test_history():
 
     data = {"message": "Test history updated successfully"}
 
+    resolution_event = {
+        "event": "delta_test",
+        "data": {
+            "test_id": test_updated.id,
+            "mother_test_id": test_updated.mother_test_id,
+            "status": test_updated.test_status.name,
+        },
+    }
+    requests.post(app.config.get("WEBSOCKETS_EVENTS_URI"), json=resolution_event)
+
     resp = jsonify(data)
     resp.status_code = 200
 
