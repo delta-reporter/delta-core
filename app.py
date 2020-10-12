@@ -506,7 +506,7 @@ def update_test_suite_history():
     suite_event = {
         "event": "delta_suite",
         "data": {
-            "test_suite_id": params.get("test_suite_history_id"),
+            "test_suite_history_id": params.get("test_suite_history_id"),
             "test_suite_status": params.get("test_suite_status"),
         },
     }
