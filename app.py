@@ -503,6 +503,15 @@ def update_test_suite_history():
         params.get("test_suite_status"),
     )
 
+    suite_event = {
+        "event": "delta_suite",
+        "data": {
+            "test_suite_id": params.get("test_suite_history_id"),
+            "test_suite_status": params.get("test_suite_status"),
+        },
+    }
+    requests.post(app.config.get("WEBSOCKETS_EVENTS_URI"), json=suite_event)
+
     data = {"message": "Test suite history updated successfully"}
 
     resp = jsonify(data)
@@ -622,7 +631,7 @@ def update_test_history():
 
     data = {"message": "Test history updated successfully"}
 
-    resolution_event = {
+    test_event = {
         "event": "delta_test",
         "data": {
             "test_id": test_updated.id,
@@ -630,7 +639,7 @@ def update_test_history():
             "status": test_updated.test_status.name,
         },
     }
-    requests.post(app.config.get("WEBSOCKETS_EVENTS_URI"), json=resolution_event)
+    requests.post(app.config.get("WEBSOCKETS_EVENTS_URI"), json=test_event)
 
     resp = jsonify(data)
     resp.status_code = 200
