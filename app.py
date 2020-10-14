@@ -152,7 +152,7 @@ def create_launch():
     project_check = crud.Read.project_by_name(params.get("project"))
 
     if not project_check:
-        project_id = crud.Create.create_project(params.get("project"))
+        project_id = crud.Create.create_project(params.get("project"), "Active")
     else:
         project_id = project_check.id
 
@@ -417,7 +417,7 @@ def create_test_suite():
     project_check = crud.Read.project_by_name(params["project"])
 
     if not project_check:
-        project_id = crud.Create.create_project(params["project"])
+        project_id = crud.Create.create_project(params["project"], "Active")
     else:
         project_id = project_check.id
 
@@ -450,7 +450,7 @@ def create_test_suite_history():
     project_check = crud.Read.project_by_name(params["project"])
 
     if not project_check:
-        project_id = crud.Create.create_project(params["project"])
+        project_id = crud.Create.create_project(params["project"], "Active")
     else:
         project_id = project_check.id
 

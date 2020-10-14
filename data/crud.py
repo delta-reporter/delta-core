@@ -110,7 +110,7 @@ class Create:
 
     @staticmethod
     def create_test(name, data, test_suite_id):
-        test = models.Test(name=name, data=data, test_suite_id=test_suite_id)
+        test = models.MotherTest(name=name, data=data, test_suite_id=test_suite_id)
         db.session.add(test)
         session_commit()
 
