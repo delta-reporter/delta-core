@@ -57,7 +57,9 @@ def create_project():
     project_check = crud.Read.project_by_name(params.get("name"))
 
     if not project_check:
-        project_id = crud.Create.create_project(params.get("name"), "Active")
+        project_id = crud.Create.create_project(
+            params.get("name"), params.get("project_status")
+        )
         message = "New project added successfully"
         project_event = {
             "event": "delta_project",
