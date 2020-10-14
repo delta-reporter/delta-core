@@ -45,10 +45,12 @@ class Create:
         session_commit()
 
     @staticmethod
-    def create_project(name):
+    def create_project(name, status):
         project = models.Project(
             name=name,
             project_status_id=constants.Constants.project_status["Active"]
+            if not status
+            else constants.Constants.project_status[status],
         )
         db.session.add(project)
         session_commit()
