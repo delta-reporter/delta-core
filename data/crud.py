@@ -162,17 +162,6 @@ class Create:
 
         return new_file.id
 
-    @staticmethod
-    def create_note(mother_test_id, note_text, added_by):
-        note = models.Notes(
-            mother_test_id=mother_test_id,
-            note_text=note_text,
-            added_by=added_by
-        )
-        db.session.add(note)
-        session_commit()
-
-        return note.id
 
 class Read:
     @staticmethod
@@ -672,19 +661,6 @@ class Read:
             test_history = None
 
         return test_history
-
-    @staticmethod
-    def notes_by_mother_test_id(mother_test_id):
-        try:
-            notes = models.Notes.query.filter_by(
-                mother_test_id=mother_test_id
-            ).all()
-        except exc.SQLAlchemyError as e:
-            logger.error(e)
-            db.session.rollback()
-            notes = None
-
-        return notes
 
 
 class Update:
