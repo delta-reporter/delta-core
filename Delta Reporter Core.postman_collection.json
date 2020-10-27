@@ -1,7 +1,7 @@
 {
 	"info": {
 		"_postman_id": "8c311388-28c9-4200-a837-41b46a8fef6f",
-		"name": "Delta Reporter",
+		"name": "Delta Reporter Core",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -38,7 +38,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"name\": \"Delta Reporter\",\n    \"project_status_id\": 1\n} ",
+					"raw": "{\n    \"name\": \"Delta Reporter\",\n    \"project_status\": \"Active\"\n} ",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -54,6 +54,33 @@
 						"api",
 						"v1",
 						"project"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Project",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{DELTA_HOST}}/api/v1/project/5",
+					"host": [
+						"{{DELTA_HOST}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"project",
+						"5"
 					]
 				}
 			},
@@ -877,6 +904,80 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "Get Test Retries by Test History ID Copy",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{DELTA_HOST}}/api/v1/tests_retries/1",
+					"host": [
+						"{{DELTA_HOST}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"tests_retries",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Media Days Old",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"days\": 7\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{DELTA_HOST}}/api/v1/delete_media_days_old",
+					"host": [
+						"{{DELTA_HOST}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"delete_media_days_old"
+					]
+				}
+			},
+			"response": []
 		}
 	],
 	"event": [
@@ -903,9 +1004,15 @@
 	],
 	"variable": [
 		{
-			"id": "b9be7dff-3a12-4e38-99b3-7b265e404c16",
+			"id": "082a1303-1e9f-4788-9cc4-32b7e8cb8869",
 			"key": "DELTA_HOST",
 			"value": "http://localhost:5000"
+		},
+		{
+			"id": "b0426be9-bbce-4bb2-a989-1c15af8c0af1",
+			"key": "DELTA_HOST",
+			"value": "http://192.168.64.2:30612",
+			"disabled": true
 		}
 	],
 	"protocolProfileBehavior": {}

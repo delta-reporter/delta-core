@@ -1,4 +1,5 @@
 import models
+import datetime
 from app import db
 from data import constants
 from logzero import logger
@@ -514,7 +515,7 @@ class Read:
         array_of_statuses = re.findall(
             "\d+", test_statuses_ids
         )  # getting all numbers from string
-        print("Test statuses array: ", array_of_statuses)
+        # print("Test statuses array: ", array_of_statuses)
 
         t_counts = TestCounts()
 
@@ -805,3 +806,14 @@ class Delete:
         session_commit()
 
         return "Project deleted successfully"
+
+    @staticmethod
+    def delete_media_older_than_days(days):
+        epoch_time = datetime.datetime.today() - datetime.timedelta(days=days)
+        amount = models.Media.query.filter(
+            models.Media.created_datetime <= epoch_time
+        ).count()
+        models.Media.query.filter(models.Media.created_datetime <= epoch_time).delete()
+        db.session.commit()
+
+        return amount
