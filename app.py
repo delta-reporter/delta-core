@@ -1183,6 +1183,47 @@ def update_project_name():
 
     return resp
 
+@app.route("/api/v1/notes", methods=["POST"])
+def create_note():
+    params = request.get_json(force=True)
+    logger.info("/notes/%s", params)
+    
+    note_id = crud.Create.create_note(
+        params.get("mother_test_id"), 
+        params.get("note_text"),
+        params.get("added_by"))
+    message = "New note added successfully"
+
+    data = {"message": message, "id": note_id}
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
+@app.route("/api/v1/notes/<int:mother_test_id>", methods=["GET"])
+def get_notes(mother_test_id):
+    logger.info("/get_notes/")
+    notes = crud.Read.notes_by_mother_test_id(mother_test_id)
+
+    if notes:
+        data = []
+        for note in notes:
+            data.append(
+                {
+                    "mother_test_id": note.mother_test_id,
+                    "note_text": note.note_text,
+                    "added_by": note.added_by,
+                    "created_datetime": note.created_datetime,
+                }
+            )
+    else:
+        data = {"message": "No notes were found"}
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
 
 @app.route("/api/v1/delete_media_days_old", methods=["DELETE"])
 def delete_media_days_old():
