@@ -310,7 +310,7 @@ def get_test_run(test_run_id):
             "launch_id": result.launch.id,
             "project_id": result.launch.project.id,
             "project_name": result.launch.project.name,
-            "launch": result.launch.name,
+            "launch_name": result.launch.name,
             "test_type": result.test_type,
             "start_datetime": result.start_datetime,
             "end_datetime": result.end_datetime,
