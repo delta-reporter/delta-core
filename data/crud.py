@@ -165,14 +165,13 @@ class Create:
     @staticmethod
     def create_note(mother_test_id, note_text, added_by):
         note = models.Notes(
-            mother_test_id=mother_test_id,
-            note_text=note_text,
-            added_by=added_by
+            mother_test_id=mother_test_id, note_text=note_text, added_by=added_by
         )
         db.session.add(note)
         session_commit()
 
         return note.id
+
 
 class Read:
     @staticmethod
@@ -458,84 +457,20 @@ class Read:
         return test_history
 
     @staticmethod
-    def test_history_by_test_run(test_run_id):
-
-        t_counts = TestCounts()
-
-        try:
-            test_history = (
-                db.session.query(
-                    models.TestRun,
-                    models.TestSuiteHistory,
-                    models.Test,
-                    t_counts.total_tests_by_test_suite_history_id.c.tests_count,
-                    t_counts.failed_tests_by_test_suite_history_id.c.failed_tests_count,
-                    t_counts.passed_tests_by_test_suite_history_id.c.passed_tests_count,
-                    t_counts.running_tests_by_test_suite_history_id.c.running_tests_count,
-                    t_counts.incomplete_tests_by_test_suite_history_id.c.incomplete_tests_count,
-                    t_counts.skipped_tests_by_test_suite_history_id.c.skipped_tests_count,
-                )
-                .outerjoin(
-                    t_counts.total_tests_by_test_suite_history_id,
-                    models.TestSuiteHistory.id
-                    == t_counts.total_tests_by_test_suite_history_id.c.test_suite_history_id,
-                )
-                .outerjoin(
-                    t_counts.failed_tests_by_test_suite_history_id,
-                    models.TestSuiteHistory.id
-                    == t_counts.failed_tests_by_test_suite_history_id.c.test_suite_history_id,
-                )
-                .outerjoin(
-                    t_counts.passed_tests_by_test_suite_history_id,
-                    models.TestSuiteHistory.id
-                    == t_counts.passed_tests_by_test_suite_history_id.c.test_suite_history_id,
-                )
-                .outerjoin(
-                    t_counts.running_tests_by_test_suite_history_id,
-                    models.TestSuiteHistory.id
-                    == t_counts.running_tests_by_test_suite_history_id.c.test_suite_history_id,
-                )
-                .outerjoin(
-                    t_counts.incomplete_tests_by_test_suite_history_id,
-                    models.TestSuiteHistory.id
-                    == t_counts.incomplete_tests_by_test_suite_history_id.c.test_suite_history_id,
-                )
-                .outerjoin(
-                    t_counts.skipped_tests_by_test_suite_history_id,
-                    models.TestSuiteHistory.id
-                    == t_counts.skipped_tests_by_test_suite_history_id.c.test_suite_history_id,
-                )
-                .filter(models.TestRun.id == models.TestSuiteHistory.test_run_id)
-                .filter(models.TestSuiteHistory.test_run_id == models.Test.test_run_id)
-                .filter(models.TestSuiteHistory.id == models.Test.test_suite_history_id)
-                .filter(models.TestRun.id == test_run_id)
-                .all()
-            )
-        except exc.SQLAlchemyError as e:
-            logger.error(e)
-            db.session.rollback()
-            test_history = None
-
-        return test_history
-
-    @staticmethod
-    def test_history_by_array_of_test_statuses_and_test_run_id(
+    def test_suite_history_by_array_of_test_statuses_and_test_run_id(
         test_statuses_ids, test_run_id
     ):
 
         array_of_statuses = re.findall(
             "\d+", test_statuses_ids
         )  # getting all numbers from string
-        # print("Test statuses array: ", array_of_statuses)
 
         t_counts = TestCounts()
 
         try:
             test_history = (
                 db.session.query(
-                    models.TestRun,
                     models.TestSuiteHistory,
-                    models.Test,
                     t_counts.total_tests_by_test_suite_history_id.c.tests_count,
                     t_counts.failed_tests_by_test_suite_history_id.c.failed_tests_count,
                     t_counts.passed_tests_by_test_suite_history_id.c.passed_tests_count,
@@ -588,11 +523,21 @@ class Read:
         return test_history
 
     @staticmethod
-    def test_history_by_test_status_id(test_status_id):
+    def tests_by_array_of_test_statuses_and_test_suite_history_id(
+        test_statuses_ids, test_suite_history_id
+    ):
+
+        array_of_statuses = re.findall(
+            "\d+", test_statuses_ids
+        )  # getting all numbers from string
+
         try:
-            test_history = models.Test.query.filter_by(
-                test_status_id=test_status_id
-            ).all()
+            test_history = (
+                db.session.query(models.Test)
+                .filter(models.Test.test_suite_history_id == test_suite_history_id)
+                .filter(models.Test.test_status_id.in_(array_of_statuses))
+                .all()
+            )
         except exc.SQLAlchemyError as e:
             logger.error(e)
             db.session.rollback()
@@ -676,9 +621,7 @@ class Read:
     @staticmethod
     def notes_by_mother_test_id(mother_test_id):
         try:
-            notes = models.Notes.query.filter_by(
-                mother_test_id=mother_test_id
-            ).all()
+            notes = models.Notes.query.filter_by(mother_test_id=mother_test_id).all()
         except exc.SQLAlchemyError as e:
             logger.error(e)
             db.session.rollback()

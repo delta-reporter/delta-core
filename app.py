@@ -61,15 +61,6 @@ def create_project():
             params.get("name"), params.get("project_status")
         )
         message = "New project added successfully"
-        project_event = {
-            "event": "delta_project",
-            "data": {
-                "name": params.get("name"),
-                "project_id": project_id,
-                "project_status": params.get("project_status"),
-            },
-        }
-        requests.post(app.config.get("WEBSOCKETS_EVENTS_URI"), json=project_event)
     else:
         project_id = project_check.id
         message = "Project recovered successfully"
@@ -160,19 +151,6 @@ def create_launch():
         params.get("name"), params.get("data"), project_id
     )
 
-    launch_event = {
-        "event": "delta_launch",
-        "data": {
-            "launch_id": launch_id,
-            "launch_status": "In Process",
-            "name": params.get("name"),
-            "project": params.get("project"),
-            "project_id": project_id,
-        },
-    }
-
-    requests.post(app.config.get("WEBSOCKETS_EVENTS_URI"), json=launch_event)
-
     data = {"message": "New launch added successfully", "id": launch_id}
 
     resp = jsonify(data)
@@ -192,19 +170,6 @@ def finish_launch():
         launch = crud.Update.update_launch(params.get("launch_id"), "Failed")
     else:
         launch = crud.Update.update_launch(params.get("launch_id"), "Successful")
-
-    launch_event = {
-        "event": "delta_launch",
-        "data": {
-            "launch_id": launch.id,
-            "launch_status": launch.launch_status.name,
-            "name": launch.name,
-            "project": launch.project.name,
-            "project_id": launch.project_id,
-        },
-    }
-
-    requests.post(app.config.get("WEBSOCKETS_EVENTS_URI"), json=launch_event)
 
     data = {"message": "Launch updated successfully", "id": launch.id}
 
@@ -275,12 +240,12 @@ def get_launches_by_project_id(project_id):
                 {
                     "test_run_id": test_run.id,
                     "test_type": test_run.test_type,
-                    "tests_total": total_count if total_count else 0,
-                    "tests_failed": failed_count if failed_count else 0,
-                    "tests_passed": passed_count if passed_count else 0,
-                    "tests_running": running_count if running_count else 0,
-                    "tests_incomplete": incomplete_count if incomplete_count else 0,
-                    "tests_skipped": skipped_count if skipped_count else 0,
+                    "tests_total": none_checker(total_count),
+                    "tests_failed": none_checker(failed_count),
+                    "tests_passed": none_checker(passed_count),
+                    "tests_running": none_checker(running_count),
+                    "tests_incomplete": none_checker(incomplete_count),
+                    "tests_skipped": none_checker(skipped_count),
                 }
             )
         data = launches
@@ -342,13 +307,16 @@ def get_test_run(test_run_id):
     if result:
         data = {
             "test_run_id": result.id,
-            "data": result.data,
+            "launch_id": result.launch.id,
+            "project_id": result.launch.project.id,
+            "project_name": result.launch.project.name,
+            "launch_name": result.launch.name,
+            "test_type": result.test_type,
             "start_datetime": result.start_datetime,
             "end_datetime": result.end_datetime,
             "duration": diff_dates(result.start_datetime, result.end_datetime),
-            "test_type": result.test_type,
             "test_run_status": result.test_run_status.name,
-            "launch": result.launch.name,
+            "test_run_data": result.data,
         }
     else:
         data = {"message": "No test run with the id provided was found"}
@@ -391,12 +359,12 @@ def get_test_runs_by_launch_id(launch_id):
                     "test_run_status": test_run.test_run_status.name,
                     "launch_name": test_run.launch.name,
                     "launch_status": test_run.launch.launch_status.name,
-                    "tests_total": total_count if total_count else 0,
-                    "tests_failed": failed_count if failed_count else 0,
-                    "tests_passed": passed_count if passed_count else 0,
-                    "tests_running": running_count if running_count else 0,
-                    "tests_incomplete": incomplete_count if incomplete_count else 0,
-                    "tests_skipped": skipped_count if skipped_count else 0,
+                    "tests_total": none_checker(total_count),
+                    "tests_failed": none_checker(failed_count),
+                    "tests_passed": none_checker(passed_count),
+                    "tests_running": none_checker(running_count),
+                    "tests_incomplete": none_checker(incomplete_count),
+                    "tests_skipped": none_checker(skipped_count),
                 }
             )
         data = test_runs
@@ -502,15 +470,6 @@ def update_test_suite_history():
         params.get("data"),
         params.get("test_suite_status"),
     )
-
-    suite_event = {
-        "event": "delta_suite",
-        "data": {
-            "test_suite_history_id": params.get("test_suite_history_id"),
-            "test_suite_status": params.get("test_suite_status"),
-        },
-    }
-    requests.post(app.config.get("WEBSOCKETS_EVENTS_URI"), json=suite_event)
 
     data = {"message": "Test suite history updated successfully"}
 
@@ -631,16 +590,6 @@ def update_test_history():
 
     data = {"message": "Test history updated successfully"}
 
-    test_event = {
-        "event": "delta_test",
-        "data": {
-            "test_id": test_updated.id,
-            "mother_test_id": test_updated.mother_test_id,
-            "status": test_updated.test_status.name,
-        },
-    }
-    requests.post(app.config.get("WEBSOCKETS_EVENTS_URI"), json=test_event)
-
     resp = jsonify(data)
     resp.status_code = 200
 
@@ -659,17 +608,6 @@ def update_test_history_resolution():
     mother_test = crud.Update.update_general_test_resolution(
         params.get("mother_test_id"), params.get("test_resolution")
     )
-
-    resolution_event = {
-        "event": "delta_resolution",
-        "data": {
-            "test_history_resolution": test.test_resolution_id,
-            "test_resolution": mother_test.test_resolution_id,
-            "test_id": test.id,
-            "mother_test_id": mother_test.id,
-        },
-    }
-    requests.post(app.config.get("WEBSOCKETS_EVENTS_URI"), json=resolution_event)
 
     data = {
         "message": "Test history resolution updated successfully",
@@ -763,94 +701,57 @@ def get_tests_suite_history_by_test_status_and_test_run_id(
     return resp
 
 
-@app.route("/api/v1/tests_history/test_run/<int:test_run_id>", methods=["GET"])
-def get_tests_history_by_test_run(test_run_id):
-    logger.info("/get_tests_history_by_test_run/%i", test_run_id)
+@app.route(
+    "/api/v1/tests_suites_history/test_status/<test_statuses_ids>/test_run/<int:test_run_id>",
+    methods=["GET"],
+)
+def get_tests_suites_history_by_test_status_and_test_run_id(
+    test_statuses_ids, test_run_id
+):
+    logger.info(
+        "/tests_history/test_status/%s/test_run/%i/", test_statuses_ids, test_run_id
+    )
 
-    results = crud.Read.test_history_by_test_run(test_run_id)
+    tests_history = crud.Read.test_suite_history_by_array_of_test_statuses_and_test_run_id(
+        test_statuses_ids=test_statuses_ids, test_run_id=test_run_id
+    )
 
-    if results:
+    if tests_history:
         test_suites = []
-        test_suites_index = {}
-        index = -1
 
-        test_run = {
-            "test_run_id": results[0][0].id,
-            "launch_id": results[0][0].launch.id,
-            "project_id": results[0][0].launch.project.id,
-            "project_name": results[0][0].launch.project.name,
-            "launch": results[0][0].launch.name,
-            "test_type": results[0][0].test_type,
-            "start_datetime": results[0][0].start_datetime,
-            "end_datetime": results[0][0].end_datetime,
-            "duration": diff_dates(
-                results[0][0].start_datetime, results[0][0].end_datetime
-            ),
-            "test_run_status": results[0][0].test_run_status.name,
-            "test_run_data": results[0][0].data,
-        }
-        for table in results:
-            test_suite_history = table[1]
-            test_history = table[2]
-            total_count = table[3]
-            failed_count = table[4]
-            passed_count = table[5]
-            running_count = table[6]
-            incomplete_count = table[7]
-            skipped_count = table[8]
-            if test_suites == [] or test_suite_history.id not in list(
-                test_suites_index.keys()
-            ):
-                index = index + 1
-                test_suites_index[test_suite_history.id] = index
-                test_suites.append(
-                    {
-                        "test_suite_history_id": test_suite_history.id,
-                        "test_suite_id": test_suite_history.test_suite.id,
-                        "name": test_suite_history.test_suite.name,
-                        "start_datetime": test_suite_history.start_datetime,
-                        "end_datetime": test_suite_history.end_datetime,
-                        "duration": diff_dates(
-                            test_suite_history.start_datetime,
-                            test_suite_history.end_datetime,
-                        ),
-                        "test_suite_status": test_suite_history.test_suite_status.name,
-                        "tests_total": total_count if total_count else 0,
-                        "tests_failed": failed_count if failed_count else 0,
-                        "tests_passed": passed_count if passed_count else 0,
-                        "tests_running": running_count if running_count else 0,
-                        "tests_incomplete": incomplete_count if incomplete_count else 0,
-                        "tests_skipped": skipped_count if skipped_count else 0,
-                        "tests": [],
-                    }
-                )
-            test_suites[test_suites_index.get(test_suite_history.id)]["tests"].append(
+        for (
+            test_suite_history,
+            total_count,
+            failed_count,
+            passed_count,
+            running_count,
+            incomplete_count,
+            skipped_count,
+        ) in tests_history:
+            test_suites.append(
                 {
-                    "test_id": test_history.id,
-                    "mother_test_id": test_history.mother_test_id,
-                    "name": test_history.mother_test.name,
-                    "trace": test_history.trace,
-                    "file": test_history.file,
-                    "message": test_history.message,
-                    "error_type": test_history.error_type,
-                    "retries": test_history.retries,
-                    "start_datetime": test_history.start_datetime,
-                    "end_datetime": test_history.end_datetime,
+                    "test_suite_history_id": test_suite_history.id,
+                    "test_suite_id": test_suite_history.test_suite.id,
+                    "name": test_suite_history.test_suite.name,
+                    "start_datetime": test_suite_history.start_datetime,
+                    "end_datetime": test_suite_history.end_datetime,
                     "duration": diff_dates(
-                        test_history.start_datetime, test_history.end_datetime
+                        test_suite_history.start_datetime,
+                        test_suite_history.end_datetime,
                     ),
-                    "status": test_history.test_status.name,
-                    "test_history_resolution": test_history.test_resolution.id,
-                    "test_resolution": test_history.mother_test.test_resolution_id,
-                    "parameters": test_history.parameters,
-                    "media": test_history.media,
-                    "is_flaky": test_history.mother_test.is_flaky,
+                    "test_suite_status": test_suite_history.test_suite_status.name,
+                    "tests_total": none_checker(total_count),
+                    "tests_failed": none_checker(failed_count),
+                    "tests_passed": none_checker(passed_count),
+                    "tests_running": none_checker(running_count),
+                    "tests_incomplete": none_checker(incomplete_count),
+                    "tests_skipped": none_checker(skipped_count),
                 }
             )
-        test_run["test_suites"] = test_suites
-        data = [test_run]
+        data = test_suites
     else:
-        data = {"message": "No tests were found"}
+        data = None
+
     resp = jsonify(data)
     resp.status_code = 200
 
@@ -858,130 +759,48 @@ def get_tests_history_by_test_run(test_run_id):
 
 
 @app.route(
-    "/api/v1/tests_history/test_status/<test_statuses_ids>/test_run/<int:test_run_id>",
+    "/api/v1/tests/test_status/<test_statuses_ids>/test_suite_history/<int:test_suite_history_id>",
     methods=["GET"],
 )
-def get_tests_history_by_test_status_and_test_run_id(test_statuses_ids, test_run_id):
+def get_tests_history_by_test_status_and_test_suite_history_id(
+    test_statuses_ids, test_suite_history_id
+):
     logger.info(
-        "/tests_history/test_status/%s/test_run/%i/", test_statuses_ids, test_run_id
+        "/tests_history/test_status/%s/test_run/%i/",
+        test_statuses_ids,
+        test_suite_history_id,
     )
 
-    tests_history = crud.Read.test_history_by_array_of_test_statuses_and_test_run_id(
-        test_statuses_ids=test_statuses_ids, test_run_id=test_run_id
+    tests_history = crud.Read.tests_by_array_of_test_statuses_and_test_suite_history_id(
+        test_statuses_ids=test_statuses_ids, test_suite_history_id=test_suite_history_id
     )
 
     if tests_history:
-        test_suites = []
-        test_suites_index = {}
-        index = -1
-
-        test_run = {
-            "test_run_id": tests_history[0][0].id,
-            "launch_id": tests_history[0][0].launch.id,
-            "project_id": tests_history[0][0].launch.project.id,
-            "launch": tests_history[0][0].launch.name,
-            "test_type": tests_history[0][0].test_type,
-            "start_datetime": tests_history[0][0].start_datetime,
-            "end_datetime": tests_history[0][0].end_datetime,
-            "duration": diff_dates(
-                tests_history[0][0].start_datetime, tests_history[0][0].end_datetime
-            ),
-            "test_run_status": tests_history[0][0].test_run_status.name,
-            "test_run_data": tests_history[0][0].data,
-        }
-        for table in tests_history:
-            test_suite_history = table[1]
-            test_history = table[2]
-            total_count = table[3]
-            failed_count = table[4]
-            passed_count = table[5]
-            running_count = table[6]
-            incomplete_count = table[7]
-            skipped_count = table[8]
-            if test_suites == [] or test_suite_history.id not in list(
-                test_suites_index.keys()
-            ):
-                index = index + 1
-                test_suites_index[test_suite_history.id] = index
-                test_suites.append(
-                    {
-                        "test_suite_history_id": test_suite_history.id,
-                        "test_suite_id": test_suite_history.test_suite.id,
-                        "name": test_suite_history.test_suite.name,
-                        "start_datetime": test_suite_history.start_datetime,
-                        "end_datetime": test_suite_history.end_datetime,
-                        "duration": diff_dates(
-                            test_suite_history.start_datetime,
-                            test_suite_history.end_datetime,
-                        ),
-                        "test_suite_status": test_suite_history.test_suite_status.name,
-                        "tests_total": total_count if total_count else 0,
-                        "tests_failed": failed_count if failed_count else 0,
-                        "tests_passed": passed_count if passed_count else 0,
-                        "tests_running": running_count if running_count else 0,
-                        "tests_incomplete": incomplete_count if incomplete_count else 0,
-                        "tests_skipped": skipped_count if skipped_count else 0,
-                        "tests": [],
-                    }
-                )
-            test_suites[test_suites_index.get(test_suite_history.id)]["tests"].append(
+        tests = []
+        for test in tests_history:
+            tests.append(
                 {
-                    "test_id": test_history.id,
-                    "mother_test_id": test_history.mother_test_id,
-                    "name": test_history.mother_test.name,
-                    "trace": test_history.trace,
-                    "file": test_history.file,
-                    "message": test_history.message,
-                    "error_type": test_history.error_type,
-                    "retries": test_history.retries,
-                    "start_datetime": test_history.start_datetime,
-                    "end_datetime": test_history.end_datetime,
-                    "duration": diff_dates(
-                        test_history.start_datetime, test_history.end_datetime
-                    ),
-                    "status": test_history.test_status.name,
-                    "test_history_resolution": test_history.test_resolution.id,
-                    "test_resolution": test_history.mother_test.test_resolution_id,
-                    "parameters": test_history.parameters,
-                    "media": test_history.media,
+                    "test_id": test.id,
+                    "mother_test_id": test.mother_test_id,
+                    "name": test.mother_test.name,
+                    "trace": test.trace,
+                    "file": test.file,
+                    "message": test.message,
+                    "error_type": test.error_type,
+                    "retries": test.retries,
+                    "start_datetime": test.start_datetime,
+                    "end_datetime": test.end_datetime,
+                    "duration": diff_dates(test.start_datetime, test.end_datetime),
+                    "status": test.test_status.name,
+                    "test_history_resolution": test.test_resolution.id,
+                    "test_resolution": test.mother_test.test_resolution_id,
+                    "parameters": test.parameters,
+                    "media": test.media,
                 }
             )
-        test_run["test_suites"] = test_suites
-        data = [test_run]
+        data = tests
     else:
-        data = {"message": "No tests were found"}
-
-    resp = jsonify(data)
-    resp.status_code = 200
-
-    return resp
-
-
-@app.route("/api/v1/tests_history/test_status/<int:test_status_id>", methods=["GET"])
-def get_tests_history_by_test_status_id(test_status_id):
-    logger.info("/tests_history_by_test_status_id/%i", test_status_id)
-
-    tests_history = crud.Read.test_history_by_test_status_id(test_status_id)
-
-    if tests_history:
-        data = []
-        for test_history in tests_history:
-            data.append(
-                {
-                    "test_history_id": test_history.id,
-                    "name": test_history.mother_test.name,
-                    "start_datetime": test_history.start_datetime,
-                    "end_datetime": test_history.end_datetime,
-                    "duration": diff_dates(
-                        test_history.start_datetime, test_history.end_datetime
-                    ),
-                    "test_status": test_history.test_status.name,
-                    "test_resolution": test_history.test_resolution.name,
-                    "test_media": test_history.media,
-                }
-            )
-    else:
-        data = {"message": "No tests were found"}
+        data = None
 
     resp = jsonify(data)
     resp.status_code = 200
@@ -1099,16 +918,16 @@ def receive_file_for_test_history(test_history_id):
     logger.info("/receive_file_for_test_history/%i", test_history_id)
 
     file = request.files.get("file")
-    type = request.form.get("type")
+    file_type = request.form.get("type")
     description = request.form.get("description", "")
-    file_id = crud.Create.store_media_file(file.filename, type, file.read())
+    file_id = crud.Create.store_media_file(file.filename, file_type, file.read())
 
     crud.Update.add_media_to_test_history(
         test_history_id,
         {
             "file_id": file_id,
             "filename": file.filename,
-            "type": type,
+            "type": file_type,
             "description": description,
         },
     )
@@ -1183,15 +1002,15 @@ def update_project_name():
 
     return resp
 
+
 @app.route("/api/v1/notes", methods=["POST"])
 def create_note():
     params = request.get_json(force=True)
     logger.info("/notes/%s", params)
-    
+
     note_id = crud.Create.create_note(
-        params.get("mother_test_id"), 
-        params.get("note_text"),
-        params.get("added_by"))
+        params.get("mother_test_id"), params.get("note_text"), params.get("added_by")
+    )
     message = "New note added successfully"
 
     data = {"message": message, "id": note_id}
@@ -1200,6 +1019,7 @@ def create_note():
     resp.status_code = 200
 
     return resp
+
 
 @app.route("/api/v1/notes/<int:mother_test_id>", methods=["GET"])
 def get_notes(mother_test_id):
@@ -1224,6 +1044,7 @@ def get_notes(mother_test_id):
     resp.status_code = 200
 
     return resp
+
 
 @app.route("/api/v1/delete_media_days_old", methods=["DELETE"])
 def delete_media_days_old():
@@ -1270,6 +1091,10 @@ def diff_dates(date1, date2):
         "seconds": diff.seconds,
         "microseconds": diff.microseconds,
     }
+
+
+def none_checker(element):
+    return element if element else 0
 
 
 if __name__ == "__main__":
