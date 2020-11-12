@@ -305,21 +305,42 @@ def get_test_run(test_run_id):
     result = crud.Read.test_run_by_id(test_run_id)
 
     if result:
-        data = {
-            "test_run_id": result.id,
-            "launch_id": result.launch.id,
-            "project_id": result.launch.project.id,
-            "project_name": result.launch.project.name,
-            "launch_name": result.launch.name,
-            "test_type": result.test_type,
-            "start_datetime": result.start_datetime,
-            "end_datetime": result.end_datetime,
-            "duration": diff_dates(result.start_datetime, result.end_datetime),
-            "test_run_status": result.test_run_status.name,
-            "test_run_data": result.data,
-        }
+        test_runs = []
+        for (
+            test_run,
+            total_count,
+            failed_count,
+            passed_count,
+            running_count,
+            incomplete_count,
+            skipped_count,
+        ) in result:
+            test_runs.append(
+                {
+                    "test_run_id": test_run.id,
+                    "launch_id": test_run.launch.id,
+                    "project_id": test_run.launch.project.id,
+                    "data": test_run.data,
+                    "start_datetime": test_run.start_datetime,
+                    "end_datetime": test_run.end_datetime,
+                    "duration": diff_dates(
+                        test_run.start_datetime, test_run.end_datetime
+                    ),
+                    "test_type": test_run.test_type,
+                    "test_run_status": test_run.test_run_status.name,
+                    "launch_name": test_run.launch.name,
+                    "launch_status": test_run.launch.launch_status.name,
+                    "tests_total": none_checker(total_count),
+                    "tests_failed": none_checker(failed_count),
+                    "tests_passed": none_checker(passed_count),
+                    "tests_running": none_checker(running_count),
+                    "tests_incomplete": none_checker(incomplete_count),
+                    "tests_skipped": none_checker(skipped_count),
+                }
+            )
+        data = test_runs
     else:
-        data = {"message": "No test run with the id provided was found"}
+        data = {"message": "No launch with the launch id provided was found"}
 
     resp = jsonify(data)
     resp.status_code = 200
