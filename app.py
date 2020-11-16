@@ -340,7 +340,7 @@ def get_test_run(test_run_id):
             )
         data = test_runs
     else:
-        data = {"message": "No launch with the launch id provided was found"}
+        data = {"message": "No test run with the id provided was found"}
 
     resp = jsonify(data)
     resp.status_code = 200
