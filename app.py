@@ -818,6 +818,7 @@ def get_tests_history_by_test_status_and_test_suite_history_id(
                     "test_resolution": test.mother_test.test_resolution_id,
                     "parameters": test.parameters,
                     "media": test.media,
+                    "is_flaky": test.mother_test.is_flaky,
                 }
             )
         data = tests
