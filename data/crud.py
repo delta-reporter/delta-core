@@ -279,8 +279,52 @@ class Read:
 
     @staticmethod
     def test_run_by_id(test_run_id):
+        t_counts = TestCounts()
+
         try:
-            test_run = models.TestRun.query.filter_by(id=test_run_id).first()
+            test_run = (
+                db.session.query(
+                    models.TestRun,
+                    t_counts.total_tests_by_test_run_id.c.tests_count,
+                    t_counts.failed_tests_by_test_run_id.c.failed_tests_count,
+                    t_counts.passed_tests_by_test_run_id.c.passed_tests_count,
+                    t_counts.running_tests_by_test_run_id.c.running_tests_count,
+                    t_counts.incomplete_tests_by_test_run_id.c.incomplete_tests_count,
+                    t_counts.skipped_tests_by_test_run_id.c.skipped_tests_count,
+                )
+                .outerjoin(
+                    t_counts.total_tests_by_test_run_id,
+                    models.TestRun.id
+                    == t_counts.total_tests_by_test_run_id.c.test_run_id,
+                )
+                .outerjoin(
+                    t_counts.failed_tests_by_test_run_id,
+                    models.TestRun.id
+                    == t_counts.failed_tests_by_test_run_id.c.test_run_id,
+                )
+                .outerjoin(
+                    t_counts.passed_tests_by_test_run_id,
+                    models.TestRun.id
+                    == t_counts.passed_tests_by_test_run_id.c.test_run_id,
+                )
+                .outerjoin(
+                    t_counts.running_tests_by_test_run_id,
+                    models.TestRun.id
+                    == t_counts.running_tests_by_test_run_id.c.test_run_id,
+                )
+                .outerjoin(
+                    t_counts.incomplete_tests_by_test_run_id,
+                    models.TestRun.id
+                    == t_counts.incomplete_tests_by_test_run_id.c.test_run_id,
+                )
+                .outerjoin(
+                    t_counts.skipped_tests_by_test_run_id,
+                    models.TestRun.id
+                    == t_counts.skipped_tests_by_test_run_id.c.test_run_id,
+                )
+                .filter(models.TestRun.id == test_run_id)
+                .order_by(models.TestRun.id)
+            )
         except exc.SQLAlchemyError as e:
             logger.error(e)
             db.session.rollback()
