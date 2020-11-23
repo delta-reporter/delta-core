@@ -146,8 +146,7 @@ class MotherTest(db.Model):
     test_suite_id = db.Column(
         db.Integer, db.ForeignKey("test_suite.id"), nullable=False
     )
-    test_resolution_id = db.Column(
-        db.Integer, db.ForeignKey("test_resolution.id"))
+    test_resolution_id = db.Column(db.Integer, db.ForeignKey("test_resolution.id"))
     is_flaky = db.Column(db.Boolean())
 
     def __repr__(self):
@@ -166,6 +165,7 @@ class Test(db.Model):
     error_type = db.Column(db.String(2000))
     retries = db.Column(db.Integer)
     parameters = db.Column(db.String(3000))
+    data = db.Column(MutableDict.as_mutable(db.JSON))
     media = db.Column(MutableList.as_mutable(db.JSON))
     mother_test_id = db.Column(
         db.Integer, db.ForeignKey("mother_test.id"), nullable=False
@@ -240,10 +240,23 @@ class Media(db.Model):
     data = db.Column(db.LargeBinary)
     created_datetime = db.Column(db.DateTime(timezone=True), server_default=func.now())
 
+
 class Notes(db.Model):
     __tablename__ = "notes"
     id = db.Column(db.Integer, primary_key=True)
-    mother_test_id = db.Column(db.Integer, db.ForeignKey("mother_test.id"), nullable=False)
+    mother_test_id = db.Column(
+        db.Integer, db.ForeignKey("mother_test.id"), nullable=False
+    )
     note_text = db.Column(db.String(2000))
     created_datetime = db.Column(db.DateTime(timezone=True), server_default=func.now())
     added_by = db.Column(db.String(200))
+
+
+class SmartLinks(db.Model):
+    __tablename__ = "smart_links"
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey("project.id"), nullable=False)
+    environment = db.Column(db.String(2000))
+    smart_link = db.Column(db.String(2000))
+    label = db.Column(db.String(30))
+    color = db.Column(db.String(20))
