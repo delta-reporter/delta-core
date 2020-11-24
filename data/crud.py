@@ -172,6 +172,20 @@ class Create:
 
         return note.id
 
+    @staticmethod
+    def create_smart_link(project_id, environment, smart_link, label, color):
+        smart_link_element = models.SmartLinks(
+            project_id=project_id,
+            environment=environment,
+            smart_link=smart_link,
+            label=label,
+            color=color,
+        )
+        db.session.add(smart_link_element)
+        session_commit()
+
+        return smart_link_element.id
+
 
 class Read:
     @staticmethod
@@ -673,6 +687,17 @@ class Read:
 
         return notes
 
+    @staticmethod
+    def smart_links_by_project_id(project_id):
+        try:
+            smart_links = models.SmartLinks.query.filter_by(project_id=project_id).all()
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            smart_links = None
+
+        return smart_links
+
 
 class Update:
     @staticmethod
@@ -804,6 +829,19 @@ class Update:
 
         return test
 
+    @staticmethod
+    def update_smart_link(id, environment, smart_link, label, color):
+        smart_link_object = db.session.query(models.SmartLinks).get(id)
+
+        smart_link_object.environment = environment
+        smart_link_object.smart_link = smart_link
+        smart_link_object.label = label
+        smart_link_object.color = color
+
+        session_commit()
+
+        return smart_link_object
+
 
 class Delete:
 
@@ -817,6 +855,16 @@ class Delete:
         session_commit()
 
         return "Project deleted successfully"
+
+    @staticmethod
+    def delete_smart_link(smart_link_id):
+        smart_link = db.session.query(models.SmartLinks).get(smart_link_id)
+        if smart_link is None:
+            return "SmartLink already deleted"
+        db.session.delete(smart_link)
+        session_commit()
+
+        return "SmartLink deleted successfully"
 
     @staticmethod
     def delete_media_older_than_days(days):
