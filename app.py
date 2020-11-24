@@ -1069,6 +1069,94 @@ def get_notes(mother_test_id):
     return resp
 
 
+@app.route("/api/v1/smart_link", methods=["POST"])
+def create_smart_link():
+    params = request.get_json(force=True)
+    logger.info("/create_smart_link/%s", params)
+
+    smart_link_id = crud.Create.create_smart_link(
+        params.get("project_id"),
+        params.get("environment"),
+        params.get("smart_link"),
+        params.get("label"),
+        params.get("color"),
+    )
+
+    message = "New smart link added successfully"
+
+    data = {"message": message, "id": smart_link_id}
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
+
+@app.route("/api/v1/update_smart_link", methods=["PUT"])
+def update_smart_link():
+    params = request.get_json(force=True)
+    logger.info("/update_smart_link/%s", params)
+
+    crud.Update.update_smart_link(
+        params.get("smart_link_id"),
+        params.get("environment"),
+        params.get("smart_link"),
+        params.get("label"),
+        params.get("color"),
+    )
+
+    data = {
+        "message": "SmartLink updated successfully",
+    }
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
+
+@app.route("/api/v1/smart_links/<int:project_id>", methods=["GET"])
+def get_smart_links(project_id):
+    logger.info("/get_smart_links/")
+    smart_links = crud.Read.smart_links_by_project_id(project_id)
+
+    if smart_links:
+        data = []
+        for sl in smart_links:
+            data.append(
+                {
+                    "smart_link_id": sl.id,
+                    "project_id": sl.project_id,
+                    "smart_link": sl.smart_link,
+                    "label": sl.label,
+                    "color": sl.color,
+                }
+            )
+    else:
+        data = {"message": "No smart links were found"}
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
+
+@app.route("/api/v1/delete_smart_link/<int:smart_link_id>", methods=["DELETE"])
+def delete_smart_link(smart_link_id):
+    logger.info("/delete_smart_link/%s", smart_link_id)
+
+    message = crud.Delete.delete_smart_link(smart_link_id)
+
+    data = {
+        "message": message,
+    }
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
+
 @app.route("/api/v1/delete_media_days_old", methods=["DELETE"])
 def delete_media_days_old():
     params = request.get_json()
