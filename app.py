@@ -240,6 +240,7 @@ def get_launches_by_project_id(project_id):
                 {
                     "test_run_id": test_run.id,
                     "test_type": test_run.test_type,
+                    "environment": test_run.environment,
                     "tests_total": none_checker(total_count),
                     "tests_failed": none_checker(failed_count),
                     "tests_passed": none_checker(passed_count),
@@ -267,6 +268,7 @@ def create_test_run():
         params.get("data"),
         params.get("start_datetime"),
         params.get("test_type"),
+        params.get("environment"),
         params.get("launch_id"),
     )
 
@@ -328,6 +330,7 @@ def get_test_run(test_run_id):
                         test_run.start_datetime, test_run.end_datetime
                     ),
                     "test_type": test_run.test_type,
+                    "environment": test_run.environment,
                     "test_run_status": test_run.test_run_status.name,
                     "launch_name": test_run.launch.name,
                     "launch_status": test_run.launch.launch_status.name,
@@ -378,6 +381,7 @@ def get_test_runs_by_launch_id(launch_id):
                         test_run.start_datetime, test_run.end_datetime
                     ),
                     "test_type": test_run.test_type,
+                    "environment": test_run.environment,
                     "test_run_status": test_run.test_run_status.name,
                     "launch_name": test_run.launch.name,
                     "launch_status": test_run.launch.launch_status.name,
@@ -1127,13 +1131,14 @@ def get_smart_links(project_id):
                 {
                     "smart_link_id": sl.id,
                     "project_id": sl.project_id,
+                    "environment": sl.environment,
                     "smart_link": sl.smart_link,
                     "label": sl.label,
                     "color": sl.color,
                 }
             )
     else:
-        data = {"message": "No smart links were found"}
+        data = None
 
     resp = jsonify(data)
     resp.status_code = 200

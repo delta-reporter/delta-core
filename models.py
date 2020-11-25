@@ -71,6 +71,7 @@ class TestRun(db.Model):
     start_datetime = db.Column(db.DateTime)
     end_datetime = db.Column(db.DateTime)
     test_type = db.Column(db.String(100), nullable=False)
+    environment = db.Column(db.String(2000))
     test_run_status_id = db.Column(
         db.Integer, db.ForeignKey("test_run_status.id"), nullable=False
     )

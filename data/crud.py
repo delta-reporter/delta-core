@@ -72,11 +72,12 @@ class Create:
         return launch.id
 
     @staticmethod
-    def create_test_run(data, start_datetime, test_type, launch_id):
+    def create_test_run(data, start_datetime, test_type, environment, launch_id):
         test_run = models.TestRun(
             data=data,
             start_datetime=start_datetime,
             test_type=test_type,
+            environment=environment,
             test_run_status_id=constants.Constants.test_run_status["Running"],
             launch_id=launch_id,
         )
