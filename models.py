@@ -11,7 +11,7 @@ class Project(db.Model):
     __tablename__ = "project"
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False, unique=True)
+    name = db.Column(db.String(300), nullable=False, unique=True)
     data = db.Column(MutableDict.as_mutable(db.JSON))
     project_status_id = db.Column(
         db.Integer, db.ForeignKey("project_status.id"), nullable=False
@@ -38,7 +38,7 @@ class Launch(db.Model):
     __tablename__ = "launch"
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False, unique=True)
+    name = db.Column(db.String(300), nullable=False, unique=True)
     data = db.Column(MutableDict.as_mutable(db.JSON))
     launch_status_id = db.Column(
         db.Integer, db.ForeignKey("launch_status.id"), nullable=False
@@ -99,7 +99,7 @@ class TestSuite(db.Model):
     __tablename__ = "test_suite"
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
+    name = db.Column(db.String(300), nullable=False)
     data = db.Column(MutableDict.as_mutable(db.JSON))
     test_type = db.Column(db.String(50), nullable=False)
     project_id = db.Column(db.Integer, db.ForeignKey("project.id"), nullable=False)
@@ -256,8 +256,26 @@ class Notes(db.Model):
 class SmartLinks(db.Model):
     __tablename__ = "smart_links"
     id = db.Column(db.Integer, primary_key=True)
+    filtered = db.Column(db.Boolean())
+    location_id = db.Column(
+        db.Integer, db.ForeignKey("smart_link_location.id"), nullable=False
+    )
+    location = db.relationship(
+        "SmartLinkLocation", backref=db.backref("smart_link_location", lazy=True)
+    )
     project_id = db.Column(db.Integer, db.ForeignKey("project.id"), nullable=False)
     environment = db.Column(db.String(2000))
-    smart_link = db.Column(db.String(2000))
+    smart_link = db.Column(db.String())
+    datetime_format = db.Column(db.String(300))
     label = db.Column(db.String(30))
     color = db.Column(db.String(20))
+
+
+class SmartLinkLocation(db.Model):
+    __tablename__ = "smart_link_location"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False, unique=True)
+
+    def __repr__(self):
+        return "<SmartLinkLocation {}>".format(self.name)
