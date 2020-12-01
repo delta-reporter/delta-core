@@ -19,33 +19,6 @@ def session_commit():
 
 class Create:
     @staticmethod
-    def initialise_status_tables():
-        db.session.add(models.ProjectStatus(name="Active"))
-        db.session.add(models.ProjectStatus(name="Inactive"))
-        db.session.add(models.ProjectStatus(name="Archived"))
-        db.session.add(models.LaunchStatus(name="Failed"))
-        db.session.add(models.LaunchStatus(name="In Process"))
-        db.session.add(models.LaunchStatus(name="Successful"))
-        db.session.add(models.TestSuiteStatus(name="Failed"))
-        db.session.add(models.TestSuiteStatus(name="Successful"))
-        db.session.add(models.TestSuiteStatus(name="Running"))
-        db.session.add(models.TestRunStatus(name="Failed"))
-        db.session.add(models.TestRunStatus(name="Passed"))
-        db.session.add(models.TestRunStatus(name="Running"))
-        db.session.add(models.TestStatus(name="Failed"))
-        db.session.add(models.TestStatus(name="Passed"))
-        db.session.add(models.TestStatus(name="Running"))
-        db.session.add(models.TestStatus(name="Incomplete"))
-        db.session.add(models.TestStatus(name="Skipped"))
-        db.session.add(models.TestResolution(name="Not set"))
-        db.session.add(models.TestResolution(name="Working as expected"))
-        db.session.add(models.TestResolution(name="Test Issue"))
-        db.session.add(models.TestResolution(name="Environment Issue"))
-        db.session.add(models.TestResolution(name="Application Issue"))
-
-        session_commit()
-
-    @staticmethod
     def create_project(name, status):
         project = models.Project(
             name=name,
@@ -72,11 +45,12 @@ class Create:
         return launch.id
 
     @staticmethod
-    def create_test_run(data, start_datetime, test_type, launch_id):
+    def create_test_run(data, start_datetime, test_type, environment, launch_id):
         test_run = models.TestRun(
             data=data,
             start_datetime=start_datetime,
             test_type=test_type,
+            environment=environment,
             test_run_status_id=constants.Constants.test_run_status["Running"],
             launch_id=launch_id,
         )
@@ -171,6 +145,32 @@ class Create:
         session_commit()
 
         return note.id
+
+    @staticmethod
+    def create_smart_link(
+        project_id,
+        environment,
+        smart_link,
+        label,
+        color,
+        filtered,
+        location,
+        datetime_format,
+    ):
+        smart_link_element = models.SmartLinks(
+            project_id=project_id,
+            environment=environment,
+            smart_link=smart_link,
+            label=label,
+            color=color,
+            filtered=filtered,
+            location_id=location,
+            datetime_format=datetime_format,
+        )
+        db.session.add(smart_link_element)
+        session_commit()
+
+        return smart_link_element.id
 
 
 class Read:
@@ -333,6 +333,17 @@ class Read:
         return test_run
 
     @staticmethod
+    def simple_test_run_by_id(test_run_id):
+        try:
+            test_run = models.TestRun.query.filter_by(id=test_run_id).first()
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            test_run = None
+
+        return test_run.__dict__
+
+    @staticmethod
     def test_run_by_launch_id(launch_id):
 
         t_counts = TestCounts()
@@ -440,15 +451,26 @@ class Read:
         return test_suite_history
 
     @staticmethod
-    def test_by_name(test_name):
+    def mother_test_by_name(test_name):
         try:
-            test = models.MotherTest.query.filter_by(name=test_name).first()
+            mother_test = models.MotherTest.query.filter_by(name=test_name).first()
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            mother_test = None
+
+        return mother_test
+
+    @staticmethod
+    def test_by_id(test_id):
+        try:
+            test = models.Test.query.filter_by(id=test_id).first()
         except exc.SQLAlchemyError as e:
             logger.error(e)
             db.session.rollback()
             test = None
 
-        return test
+        return test.__dict__
 
     @staticmethod
     def test_suite_history_by_test_run(test_run_id):
@@ -673,6 +695,30 @@ class Read:
 
         return notes
 
+    @staticmethod
+    def smart_links_by_project_id(project_id):
+        try:
+            smart_links = models.SmartLinks.query.filter_by(project_id=project_id).all()
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            smart_links = None
+
+        return smart_links
+
+    @staticmethod
+    def smart_links_by_project_id_and_location(project_id, location):
+        try:
+            smart_links = models.SmartLinks.query.filter_by(
+                project_id=project_id, location_id=location
+            ).all()
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            smart_links = None
+
+        return smart_links
+
 
 class Update:
     @staticmethod
@@ -749,15 +795,22 @@ class Update:
         return test_suite_history.id
 
     @staticmethod
-    def update_test_run(test_run_id, end_datetime, test_run_status, data):
+    def update_test_run(test_run_id, end_datetime, test_run_status):
         test_run = db.session.query(models.TestRun).get(test_run_id)
         test_run.end_datetime = end_datetime
-        if test_run.data is None:
-            test_run.data = data
         if test_run_status is not None:
             test_run.test_run_status_id = constants.Constants.test_run_status.get(
                 test_run_status
             )
+
+        session_commit()
+
+        return test_run.id
+
+    @staticmethod
+    def update_test_run_data(test_run_id, data):
+        test_run = db.session.query(models.TestRun).get(test_run_id)
+        test_run.data = data
 
         session_commit()
 
@@ -786,6 +839,15 @@ class Update:
         return test_history.id
 
     @staticmethod
+    def update_test_data(test_id, data):
+        test = db.session.query(models.Test).get(test_id)
+        test.data = data
+
+        session_commit()
+
+        return test.id
+
+    @staticmethod
     def update_project_name(id, name):
         project = db.session.query(models.Project).get(id)
         if project.name != name:
@@ -804,6 +866,21 @@ class Update:
 
         return test
 
+    @staticmethod
+    def update_smart_link(id, environment, smart_link, label, color, type, location):
+        smart_link_object = db.session.query(models.SmartLinks).get(id)
+
+        smart_link_object.environment = environment
+        smart_link_object.smart_link = smart_link
+        smart_link_object.label = label
+        smart_link_object.color = color
+        smart_link_object.type_id = type
+        smart_link_object.location_id = location
+
+        session_commit()
+
+        return smart_link_object
+
 
 class Delete:
 
@@ -817,6 +894,16 @@ class Delete:
         session_commit()
 
         return "Project deleted successfully"
+
+    @staticmethod
+    def delete_smart_link(smart_link_id):
+        smart_link = db.session.query(models.SmartLinks).get(smart_link_id)
+        if smart_link is None:
+            return "SmartLink already deleted"
+        db.session.delete(smart_link)
+        session_commit()
+
+        return "SmartLink deleted successfully"
 
     @staticmethod
     def delete_media_older_than_days(days):

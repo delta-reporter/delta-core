@@ -11,7 +11,7 @@ class Project(db.Model):
     __tablename__ = "project"
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False, unique=True)
+    name = db.Column(db.String(300), nullable=False, unique=True)
     data = db.Column(MutableDict.as_mutable(db.JSON))
     project_status_id = db.Column(
         db.Integer, db.ForeignKey("project_status.id"), nullable=False
@@ -38,7 +38,7 @@ class Launch(db.Model):
     __tablename__ = "launch"
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False, unique=True)
+    name = db.Column(db.String(300), nullable=False, unique=True)
     data = db.Column(MutableDict.as_mutable(db.JSON))
     launch_status_id = db.Column(
         db.Integer, db.ForeignKey("launch_status.id"), nullable=False
@@ -71,6 +71,7 @@ class TestRun(db.Model):
     start_datetime = db.Column(db.DateTime)
     end_datetime = db.Column(db.DateTime)
     test_type = db.Column(db.String(100), nullable=False)
+    environment = db.Column(db.String(2000))
     test_run_status_id = db.Column(
         db.Integer, db.ForeignKey("test_run_status.id"), nullable=False
     )
@@ -98,7 +99,7 @@ class TestSuite(db.Model):
     __tablename__ = "test_suite"
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
+    name = db.Column(db.String(300), nullable=False)
     data = db.Column(MutableDict.as_mutable(db.JSON))
     test_type = db.Column(db.String(50), nullable=False)
     project_id = db.Column(db.Integer, db.ForeignKey("project.id"), nullable=False)
@@ -146,8 +147,7 @@ class MotherTest(db.Model):
     test_suite_id = db.Column(
         db.Integer, db.ForeignKey("test_suite.id"), nullable=False
     )
-    test_resolution_id = db.Column(
-        db.Integer, db.ForeignKey("test_resolution.id"))
+    test_resolution_id = db.Column(db.Integer, db.ForeignKey("test_resolution.id"))
     is_flaky = db.Column(db.Boolean())
 
     def __repr__(self):
@@ -166,6 +166,7 @@ class Test(db.Model):
     error_type = db.Column(db.String(2000))
     retries = db.Column(db.Integer)
     parameters = db.Column(db.String(3000))
+    data = db.Column(MutableDict.as_mutable(db.JSON))
     media = db.Column(MutableList.as_mutable(db.JSON))
     mother_test_id = db.Column(
         db.Integer, db.ForeignKey("mother_test.id"), nullable=False
@@ -240,10 +241,41 @@ class Media(db.Model):
     data = db.Column(db.LargeBinary)
     created_datetime = db.Column(db.DateTime(timezone=True), server_default=func.now())
 
+
 class Notes(db.Model):
     __tablename__ = "notes"
     id = db.Column(db.Integer, primary_key=True)
-    mother_test_id = db.Column(db.Integer, db.ForeignKey("mother_test.id"), nullable=False)
+    mother_test_id = db.Column(
+        db.Integer, db.ForeignKey("mother_test.id"), nullable=False
+    )
     note_text = db.Column(db.String(2000))
     created_datetime = db.Column(db.DateTime(timezone=True), server_default=func.now())
     added_by = db.Column(db.String(200))
+
+
+class SmartLinks(db.Model):
+    __tablename__ = "smart_links"
+    id = db.Column(db.Integer, primary_key=True)
+    filtered = db.Column(db.Boolean())
+    location_id = db.Column(
+        db.Integer, db.ForeignKey("smart_link_location.id"), nullable=False
+    )
+    location = db.relationship(
+        "SmartLinkLocation", backref=db.backref("smart_link_location", lazy=True)
+    )
+    project_id = db.Column(db.Integer, db.ForeignKey("project.id"), nullable=False)
+    environment = db.Column(db.String(2000))
+    smart_link = db.Column(db.String())
+    datetime_format = db.Column(db.String(300))
+    label = db.Column(db.String(30))
+    color = db.Column(db.String(20))
+
+
+class SmartLinkLocation(db.Model):
+    __tablename__ = "smart_link_location"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False, unique=True)
+
+    def __repr__(self):
+        return "<SmartLinkLocation {}>".format(self.name)

@@ -8,6 +8,7 @@ from io import BytesIO
 from flask import Flask, request, jsonify, render_template, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from components.smart_links import SmartLinks
 
 
 app = Flask(__name__)
@@ -240,6 +241,7 @@ def get_launches_by_project_id(project_id):
                 {
                     "test_run_id": test_run.id,
                     "test_type": test_run.test_type,
+                    "environment": test_run.environment,
                     "tests_total": none_checker(total_count),
                     "tests_failed": none_checker(failed_count),
                     "tests_passed": none_checker(passed_count),
@@ -267,6 +269,7 @@ def create_test_run():
         params.get("data"),
         params.get("start_datetime"),
         params.get("test_type"),
+        params.get("environment"),
         params.get("launch_id"),
     )
 
@@ -287,10 +290,24 @@ def update_test_run():
         params.get("test_run_id"),
         params.get("end_datetime"),
         params.get("test_run_status"),
-        params.get("data"),
     )
 
     data = {"message": "Test run updated successfully", "id": test_run_id}
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
+
+@app.route("/api/v1/test_run_data/<int:test_run_id>", methods=["PUT"])
+def update_test_run_data(test_run_id):
+    params = request.get_json(force=True)
+    logger.info("/update_test_run_data/%s", params)
+
+    test_run_id = crud.Update.update_test_run_data(test_run_id, params.get("data"),)
+
+    data = {"message": "Test run data updated successfully", "id": test_run_id}
 
     resp = jsonify(data)
     resp.status_code = 200
@@ -325,9 +342,12 @@ def get_test_run(test_run_id):
                     "start_datetime": test_run.start_datetime,
                     "end_datetime": test_run.end_datetime,
                     "duration": diff_dates(
-                        test_run.start_datetime, test_run.end_datetime
+                        test_run.start_datetime,
+                        test_run.end_datetime,
+                        test_run.launch.launch_status.name,
                     ),
                     "test_type": test_run.test_type,
+                    "environment": test_run.environment,
                     "test_run_status": test_run.test_run_status.name,
                     "launch_name": test_run.launch.name,
                     "launch_status": test_run.launch.launch_status.name,
@@ -375,9 +395,12 @@ def get_test_runs_by_launch_id(launch_id):
                     "start_datetime": test_run.start_datetime,
                     "end_datetime": test_run.end_datetime,
                     "duration": diff_dates(
-                        test_run.start_datetime, test_run.end_datetime
+                        test_run.start_datetime,
+                        test_run.end_datetime,
+                        test_run.launch.launch_status.name,
                     ),
                     "test_type": test_run.test_type,
+                    "environment": test_run.environment,
                     "test_run_status": test_run.test_run_status.name,
                     "launch_name": test_run.launch.name,
                     "launch_status": test_run.launch.launch_status.name,
@@ -528,7 +551,7 @@ def create_test_history():
     params = request.get_json(force=True)
     logger.info("/create_test_history/%s", params)
 
-    test_check = crud.Read.test_by_name(params.get("name"))
+    test_check = crud.Read.mother_test_by_name(params.get("name"))
 
     if not test_check:
         test_id = crud.Create.create_test(
@@ -618,6 +641,21 @@ def update_test_history():
     return resp
 
 
+@app.route("/api/v1/test_data/<int:test_id>", methods=["PUT"])
+def update_test_data(test_id):
+    params = request.get_json(force=True)
+    logger.info("/update_test_data/%s", params)
+
+    test_id = crud.Update.update_test_data(test_id, params.get("data"),)
+
+    data = {"message": "Test data updated successfully", "id": test_id}
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
+
 @app.route("/api/v1/test_history_resolution", methods=["PUT"])
 def update_test_history_resolution():
     params = request.get_json(force=True)
@@ -665,6 +703,7 @@ def get_tests_suite_history_by_test_run(test_run_id):
                     "duration": diff_dates(
                         test_suite_history.start_datetime,
                         test_suite_history.end_datetime,
+                        test_suite_history.test_suite_status.name,
                     ),
                     "test_suite_status": test_suite_history.test_suite_status.name,
                 }
@@ -710,6 +749,7 @@ def get_tests_suite_history_by_test_status_and_test_run_id(
                     "duration": diff_dates(
                         test_suite_history.start_datetime,
                         test_suite_history.end_datetime,
+                        test_suite_history.test_suite_status.name,
                     ),
                     "test_suite_status": test_suite_history.test_suite_status.name,
                 }
@@ -760,6 +800,7 @@ def get_tests_suites_history_by_test_status_and_test_run_id(
                     "duration": diff_dates(
                         test_suite_history.start_datetime,
                         test_suite_history.end_datetime,
+                        test_suite_history.test_suite_status.name,
                     ),
                     "test_suite_status": test_suite_history.test_suite_status.name,
                     "tests_total": none_checker(total_count),
@@ -812,7 +853,9 @@ def get_tests_history_by_test_status_and_test_suite_history_id(
                     "retries": test.retries,
                     "start_datetime": test.start_datetime,
                     "end_datetime": test.end_datetime,
-                    "duration": diff_dates(test.start_datetime, test.end_datetime),
+                    "duration": diff_dates(
+                        test.start_datetime, test.end_datetime, test.test_status.name
+                    ),
                     "status": test.test_status.name,
                     "test_history_resolution": test.test_resolution.id,
                     "test_resolution": test.mother_test.test_resolution_id,
@@ -849,7 +892,9 @@ def get_tests_history_by_test_resolution_id(test_resolution_id):
                     "start_datetime": test_history.start_datetime,
                     "end_datetime": test_history.end_datetime,
                     "duration": diff_dates(
-                        test_history.start_datetime, test_history.end_datetime
+                        test_history.start_datetime,
+                        test_history.end_datetime,
+                        test_history.test_status.name,
                     ),
                     "test_status": test_history.test_status.name,
                     "test_resolution": test_history.test_resolution.name,
@@ -884,7 +929,9 @@ def get_tests_history_by_test_suite_id(test_suite_id):
                     "start_datetime": test_history.start_datetime,
                     "end_datetime": test_history.end_datetime,
                     "duration": diff_dates(
-                        test_history.start_datetime, test_history.end_datetime
+                        test_history.start_datetime,
+                        test_history.end_datetime,
+                        test_history.test_status.name,
                     ),
                     "test_status": test_history.test_status.name,
                     "test_resolution": test_history.test_resolution.name,
@@ -918,7 +965,7 @@ def get_test_retries_by_test_history_id(test_history_id):
                     "start_datetime": test_retry.start_datetime,
                     "end_datetime": test_retry.end_datetime,
                     "duration": diff_dates(
-                        test_retry.start_datetime, test_retry.end_datetime
+                        test_retry.start_datetime, test_retry.end_datetime, "Failed"
                     ),
                     "retry_count": test_retry.retry_count,
                     "trace": test_retry.trace,
@@ -979,7 +1026,9 @@ def get_test_history_by_test_id(test_id):
                     "start_datetime": test_history.start_datetime,
                     "end_datetime": test_history.end_datetime,
                     "duration": diff_dates(
-                        test_history.start_datetime, test_history.end_datetime
+                        test_history.start_datetime,
+                        test_history.end_datetime,
+                        test_history.test_status.name,
                     ),
                     "status": test_history.test_status.name,
                     "resolution": test_history.test_resolution.id,
@@ -1069,6 +1118,192 @@ def get_notes(mother_test_id):
     return resp
 
 
+@app.route("/api/v1/smart_link", methods=["POST"])
+def create_smart_link():
+    params = request.get_json(force=True)
+    logger.info("/create_smart_link/%s", params)
+
+    smart_link_id = crud.Create.create_smart_link(
+        params.get("project_id"),
+        params.get("environment"),
+        params.get("smart_link"),
+        params.get("label"),
+        params.get("color"),
+        params.get("filtered"),
+        params.get("location"),
+        params.get("datetime_format"),
+    )
+
+    message = "New smart link added successfully"
+
+    data = {"message": message, "id": smart_link_id}
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
+
+@app.route("/api/v1/update_smart_link", methods=["PUT"])
+def update_smart_link():
+    params = request.get_json(force=True)
+    logger.info("/update_smart_link/%s", params)
+
+    crud.Update.update_smart_link(
+        params.get("smart_link_id"),
+        params.get("environment"),
+        params.get("smart_link"),
+        params.get("label"),
+        params.get("color"),
+        params.get("filtered"),
+        params.get("location"),
+        params.get("datetime_format"),
+    )
+
+    data = {
+        "message": "SmartLink updated successfully",
+    }
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
+
+@app.route("/api/v1/smart_links/<int:project_id>", methods=["GET"])
+def get_smart_links(project_id):
+    logger.info("/get_smart_links/")
+    smart_links = crud.Read.smart_links_by_project_id(project_id)
+
+    if smart_links:
+        data = []
+        for sl in smart_links:
+            data.append(
+                {
+                    "smart_link_id": sl.id,
+                    "project_id": sl.project_id,
+                    "environment": sl.environment,
+                    "smart_link": sl.smart_link,
+                    "label": sl.label,
+                    "color": sl.color,
+                    "filtered": sl.filtered,
+                    "location": sl.location.name,
+                    "datetime_format": sl.datetime_format,
+                }
+            )
+    else:
+        data = None
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
+
+@app.route("/api/v1/smart_links_for_test", methods=["POST"])
+def get_smart_links_for_test():
+    logger.info("/get_smart_links_for_test/")
+    params = request.get_json(force=True)
+    test_sl_location_id = 1
+    smart_links = crud.Read.smart_links_by_project_id_and_location(
+        params.get("project_id"), test_sl_location_id
+    )
+    test = crud.Read.test_by_id(params.get("test_id"))
+    test_data = test.pop("data", None)
+
+    environment = params.get("environment")
+
+    sl_data = []
+
+    if smart_links:
+        for sl in smart_links:
+            sl_data.append(
+                {
+                    "smart_link_id": sl.id,
+                    "project_id": sl.project_id,
+                    "environment": sl.environment,
+                    "smart_link": sl.smart_link,
+                    "label": sl.label,
+                    "color": sl.color,
+                    "filtered": sl.filtered,
+                    "location": sl.location.name,
+                    "datetime_format": sl.datetime_format,
+                }
+            )
+    else:
+        data = None
+
+    sl = SmartLinks()
+
+    data = sl.get_smart_links_for_test(sl_data, environment, test, test_data)
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
+
+@app.route("/api/v1/smart_links_for_test_run", methods=["POST"])
+def get_smart_links_for_test_run():
+    logger.info("/get_smart_links_for_test_run/")
+    params = request.get_json(force=True)
+    test_run_sl_location_id = 2
+    smart_links = crud.Read.smart_links_by_project_id_and_location(
+        params.get("project_id"), test_run_sl_location_id
+    )
+    test_run = crud.Read.simple_test_run_by_id(params.get("test_run_id"))
+    test_run_data = test_run.pop("data", None)
+
+    environment = params.get("environment")
+
+    sl_data = []
+
+    if smart_links:
+        for sl in smart_links:
+            sl_data.append(
+                {
+                    "smart_link_id": sl.id,
+                    "project_id": sl.project_id,
+                    "environment": sl.environment,
+                    "smart_link": sl.smart_link,
+                    "label": sl.label,
+                    "color": sl.color,
+                    "filtered": sl.filtered,
+                    "location": sl.location.name,
+                    "datetime_format": sl.datetime_format,
+                }
+            )
+    else:
+        data = None
+
+    sl = SmartLinks()
+
+    data = sl.get_smart_links_for_test_run(
+        sl_data, environment, test_run, test_run_data
+    )
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
+
+@app.route("/api/v1/delete_smart_link/<int:smart_link_id>", methods=["DELETE"])
+def delete_smart_link(smart_link_id):
+    logger.info("/delete_smart_link/%s", smart_link_id)
+
+    message = crud.Delete.delete_smart_link(smart_link_id)
+
+    data = {
+        "message": message,
+    }
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
+
 @app.route("/api/v1/delete_media_days_old", methods=["DELETE"])
 def delete_media_days_old():
     params = request.get_json()
@@ -1097,8 +1332,8 @@ def notfound(error):
     return resp
 
 
-def diff_dates(date1, date2):
-    if not date1:
+def diff_dates(date1, date2, status):
+    if not date1 or status == "Skipped":
         return None
     if not date2:
         date2 = datetime.datetime.now()

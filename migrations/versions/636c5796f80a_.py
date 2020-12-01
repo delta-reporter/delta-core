@@ -1,12 +1,14 @@
 """empty message
 
 Revision ID: 636c5796f80a
-Revises: 
+Revises:
 Create Date: 2020-03-25 16:39:34.344107
 
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import orm
+import models
 
 
 # revision identifiers, used by Alembic.
@@ -151,6 +153,36 @@ def upgrade():
         sa.PrimaryKeyConstraint("id"),
     )
     # ### end Alembic commands ###
+
+    # ### initialise statuses tables ###
+
+    bind = op.get_bind()
+    session = orm.Session(bind=bind)
+
+    session.add(models.ProjectStatus(name="Active"))
+    session.add(models.ProjectStatus(name="Inactive"))
+    session.add(models.ProjectStatus(name="Archived"))
+    session.add(models.LaunchStatus(name="Failed"))
+    session.add(models.LaunchStatus(name="In Process"))
+    session.add(models.LaunchStatus(name="Successful"))
+    session.add(models.TestSuiteStatus(name="Failed"))
+    session.add(models.TestSuiteStatus(name="Successful"))
+    session.add(models.TestSuiteStatus(name="Running"))
+    session.add(models.TestRunStatus(name="Failed"))
+    session.add(models.TestRunStatus(name="Passed"))
+    session.add(models.TestRunStatus(name="Running"))
+    session.add(models.TestStatus(name="Failed"))
+    session.add(models.TestStatus(name="Passed"))
+    session.add(models.TestStatus(name="Running"))
+    session.add(models.TestStatus(name="Incomplete"))
+    session.add(models.TestStatus(name="Skipped"))
+    session.add(models.TestResolution(name="Not set"))
+    session.add(models.TestResolution(name="Working as expected"))
+    session.add(models.TestResolution(name="Test Issue"))
+    session.add(models.TestResolution(name="Environment Issue"))
+    session.add(models.TestResolution(name="Application Issue"))
+
+    session.commit()
 
 
 def downgrade():
