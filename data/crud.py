@@ -579,6 +579,8 @@ class Read:
                 .filter(models.TestSuiteHistory.id == models.Test.test_suite_history_id)
                 .filter(models.TestRun.id == test_run_id)
                 .filter(models.Test.test_status_id.in_(array_of_statuses))
+                .join(models.TestSuite)
+                .order_by(models.TestSuite.name.asc())
                 .all()
             )
         except exc.SQLAlchemyError as e:
@@ -602,6 +604,7 @@ class Read:
                 db.session.query(models.Test)
                 .filter(models.Test.test_suite_history_id == test_suite_history_id)
                 .filter(models.Test.test_status_id.in_(array_of_statuses))
+                .order_by(models.Test.id.desc())
                 .all()
             )
         except exc.SQLAlchemyError as e:
