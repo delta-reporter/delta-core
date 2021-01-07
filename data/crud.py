@@ -645,6 +645,26 @@ class Read:
         return test_history
 
     @staticmethod
+    def test_history_failed_by_test_suite_history_id(test_suite_history_id):
+        try:
+            test_history = (
+                db.session.query(models.Test)
+                .filter(models.Test.test_suite_history_id == models.TestSuiteHistory.id)
+                .filter(
+                    models.Test.test_status_id
+                    == constants.Constants.test_status["Failed"]
+                )
+                .filter(models.TestSuiteHistory.id == test_suite_history_id)
+                .all()
+            )
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            test_history = None
+
+        return test_history
+
+    @staticmethod
     def test_retries_by_test_history_id(test_history_id):
         try:
             test_retries = models.TestRetries.query.filter_by(
@@ -781,17 +801,23 @@ class Update:
         return test
 
     @staticmethod
-    def update_test_suite_history(
-        test_suite_history_id, end_datetime, data, test_suite_status
-    ):
+    def update_test_suite_history(test_suite_history_id, end_datetime, data):
+
+        failed_test = Read.test_history_failed_by_test_suite_history_id(
+            test_suite_history_id
+        )
+
+        if failed_test:
+            test_suite_status = constants.Constants.test_suite_status["Failed"]
+        else:
+            test_suite_status = constants.Constants.test_suite_status["Successful"]
+
         test_suite_history = db.session.query(models.TestSuiteHistory).get(
             test_suite_history_id
         )
         test_suite_history.end_datetime = end_datetime
         test_suite_history.data = data
-        test_suite_history.test_suite_status_id = constants.Constants.test_suite_status.get(
-            test_suite_status
-        )
+        test_suite_history.test_suite_status_id = test_suite_status
 
         session_commit()
 
