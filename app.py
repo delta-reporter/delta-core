@@ -513,7 +513,6 @@ def update_test_suite_history():
         params.get("test_suite_history_id"),
         params.get("end_datetime"),
         params.get("data"),
-        params.get("test_suite_status"),
     )
 
     data = {"message": "Test suite history updated successfully"}
