@@ -80,18 +80,8 @@ Or using delta_core container:
 
 This command runs the scripts located in `migrations/versions/` in order to apply the changes on the database
 
-if for any reason you want to restore the schema to a previous state, use `python manage.py db downgrade`
+If for any reason you want to restore the schema to a previous state, use `python manage.py db downgrade`
 
-Then, to load default values, start the Core Service and send a POST request to this endpoint
+Thats it! We really hope that you enjoy using Delta Reporter
 
-`/initial_setup`
-
-If you got
-
-`
-{
-  "message": "Database initialized successfully"
-}
-`
-
-Then the tables `ProjectStatus, LaunchStatus, TestSuiteStatus, TestType, TestRunStatus, TestStatus, TestResolution` are gonna have values on them
+Please feel free to create issues, PRs, or send us an email at deltareporterone@gmail.com
