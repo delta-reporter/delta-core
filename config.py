@@ -9,7 +9,6 @@ class Config(object):
     CSRF_ENABLED = True
     SECRET_KEY = "alpha-beta-delta-epsilon-lambda-gamma-omega"
     SQLALCHEMY_DATABASE_URI = os.environ["DATABASE_URL"]
-    WEBSOCKETS_EVENTS_URI = os.environ["WEBSOCKETS_URL"]
 
 
 class ProductionConfig(Config):
