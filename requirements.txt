@@ -14,3 +14,4 @@ Werkzeug==1.0.1
 flask-cors==3.0.8
 art==4.7
 requests==2.24.0
+pytz==2021.1
