@@ -1303,24 +1303,6 @@ def delete_smart_link(smart_link_id):
     return resp
 
 
-@app.route("/api/v1/delete_media_days_old", methods=["DELETE"])
-def delete_media_days_old():
-    params = request.get_json()
-    days = params.get("days")
-    logger.info("### DELETING MEDIA {} DAYS OLD ###".format(days))
-
-    amount = crud.Delete.delete_media_older_than_days(days)
-
-    data = {
-        "message": "### {} media elements were deleted ###".format(amount),
-    }
-
-    resp = jsonify(data)
-    resp.status_code = 200
-
-    return resp
-
-
 @app.errorhandler(404)
 def notfound(error):
     data = {"message": "The endpoint requested was not found"}

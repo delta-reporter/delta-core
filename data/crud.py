@@ -7,6 +7,10 @@ from sqlalchemy import exc
 from sqlalchemy.sql import func
 from data.subqueries import TestCounts
 import re
+import os
+import pytz
+
+utc = pytz.UTC
 
 
 def session_commit():
@@ -133,6 +137,8 @@ class Create:
         new_file = models.Media(name=name, type=type, data=file)
         db.session.add(new_file)
         session_commit()
+
+        Delete.delete_media_older_than_days()
 
         return new_file.id
 
@@ -935,12 +941,17 @@ class Delete:
         return "SmartLink deleted successfully"
 
     @staticmethod
-    def delete_media_older_than_days(days):
-        epoch_time = datetime.datetime.today() - datetime.timedelta(days=days)
+    def delete_media_older_than_days():
+        days = os.environ["DAYS_OLD_MEDIA_DELETE"]
+        epoch_time = utc.localize(datetime.datetime.today()) - datetime.timedelta(
+            days=int(days)
+        )
         amount = models.Media.query.filter(
             models.Media.created_datetime <= epoch_time
         ).count()
         models.Media.query.filter(models.Media.created_datetime <= epoch_time).delete()
         db.session.commit()
 
-        return amount
+        logger.warning(
+            "{} elements, older than {} days were deleted ".format(amount, days)
+        )
