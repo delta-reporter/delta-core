@@ -19,6 +19,7 @@ class Project(db.Model):
     project_status = db.relationship(
         "ProjectStatus", backref=db.backref("project_status", lazy=True)
     )
+    test_suites = db.relationship("TestSuite", cascade="all,delete", backref="project")
 
     def __repr__(self):
         return "<Project {}>".format(self.name)
@@ -47,7 +48,9 @@ class Launch(db.Model):
         "LaunchStatus", backref=db.backref("launch_status", lazy=True)
     )
     project_id = db.Column(db.Integer, db.ForeignKey("project.id"), nullable=False)
-    project = db.relationship("Project", backref=db.backref("project", lazy=True))
+    project = db.relationship(
+        "Project", backref=db.backref("project", lazy=True, cascade="all,delete")
+    )
 
     def __repr__(self):
         return "<Launch {}>".format(self.name)
@@ -79,7 +82,9 @@ class TestRun(db.Model):
         "TestRunStatus", backref=db.backref("test_run_status", lazy=True)
     )
     launch_id = db.Column(db.Integer, db.ForeignKey("launch.id"), nullable=False)
-    launch = db.relationship("Launch", backref=db.backref("launch", lazy=True))
+    launch = db.relationship(
+        "Launch", backref=db.backref("launch", lazy=True, cascade="all,delete")
+    )
 
     def __repr__(self):
         return "<TestRun {}>".format(self.id)
@@ -103,6 +108,9 @@ class TestSuite(db.Model):
     data = db.Column(MutableDict.as_mutable(db.JSON))
     test_type = db.Column(db.String(50), nullable=False)
     project_id = db.Column(db.Integer, db.ForeignKey("project.id"), nullable=False)
+    mother_tests = db.relationship(
+        "MotherTest", cascade="all,delete", backref="test_suite"
+    )
 
 
 class TestSuiteHistory(db.Model):
@@ -119,13 +127,16 @@ class TestSuiteHistory(db.Model):
         "TestSuiteStatus", backref=db.backref("test_suite_status", lazy=True)
     )
     test_run_id = db.Column(db.Integer, db.ForeignKey("test_run.id"), nullable=False)
-    test_run = db.relationship("TestRun", backref=db.backref("test_run", lazy=True))
+    test_run = db.relationship(
+        "TestRun", backref=db.backref("test_run", lazy=True, cascade="all,delete")
+    )
     test_suite_id = db.Column(
         db.Integer, db.ForeignKey("test_suite.id"), nullable=False
     )
     test_suite = db.relationship(
-        "TestSuite", backref=db.backref("test_suite", lazy=True)
+        "TestSuite", backref=db.backref("test_suite", lazy=True, cascade="all,delete")
     )
+    tests = db.relationship("Test", cascade="all,delete", backref="test_suite_history")
 
 
 class TestSuiteStatus(db.Model):
@@ -172,7 +183,7 @@ class Test(db.Model):
         db.Integer, db.ForeignKey("mother_test.id"), nullable=False
     )
     mother_test = db.relationship(
-        "MotherTest", backref=db.backref("mother_test", lazy=True)
+        "MotherTest", backref=db.backref("mother_test", lazy=True, cascade="all,delete")
     )
     test_status_id = db.Column(
         db.Integer, db.ForeignKey("test_status.id"), nullable=False
@@ -190,6 +201,7 @@ class Test(db.Model):
     test_suite_history_id = db.Column(
         db.Integer, db.ForeignKey("test_suite_history.id"), nullable=False
     )
+    test_retries = db.relationship("TestRetries", cascade="all,delete", backref="test")
 
     def __repr__(self):
         return "<Test {}>".format(self.id)

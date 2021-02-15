@@ -918,8 +918,6 @@ class Update:
 
 
 class Delete:
-
-    # This is just a simple approach for deleting a project, not ready for use yet
     @staticmethod
     def delete_project(project_id):
         project = db.session.query(models.Project).get(project_id)

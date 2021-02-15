@@ -74,7 +74,6 @@ def create_project():
     return resp
 
 
-# This is just a simple approach for deleting a project, not ready for use yet
 @app.route("/api/v1/project/<int:project_id>", methods=["DELETE"])
 def delete_project(project_id):
     logger.info("/delete_project/%s", project_id)
