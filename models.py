@@ -3,6 +3,7 @@ from sqlalchemy import event
 from sqlalchemy.sql import func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.mutable import MutableList, MutableDict
+from data.constants import Constants
 
 Base = declarative_base()
 
@@ -19,7 +20,12 @@ class Project(db.Model):
     project_status = db.relationship(
         "ProjectStatus", backref=db.backref("project_status", lazy=True)
     )
-    test_suites = db.relationship("TestSuite", cascade="all,delete", backref="project")
+    test_suites = db.relationship(
+        "TestSuite", cascade=Constants.cascade_relations, backref="project"
+    )
+    smart_links = db.relationship(
+        "SmartLinks", cascade=Constants.cascade_relations, backref="project"
+    )
 
     def __repr__(self):
         return "<Project {}>".format(self.name)
@@ -49,7 +55,8 @@ class Launch(db.Model):
     )
     project_id = db.Column(db.Integer, db.ForeignKey("project.id"), nullable=False)
     project = db.relationship(
-        "Project", backref=db.backref("project", lazy=True, cascade="all,delete")
+        "Project",
+        backref=db.backref("project", lazy=True, cascade=Constants.cascade_relations),
     )
 
     def __repr__(self):
@@ -83,7 +90,8 @@ class TestRun(db.Model):
     )
     launch_id = db.Column(db.Integer, db.ForeignKey("launch.id"), nullable=False)
     launch = db.relationship(
-        "Launch", backref=db.backref("launch", lazy=True, cascade="all,delete")
+        "Launch",
+        backref=db.backref("launch", lazy=True, cascade=Constants.cascade_relations),
     )
 
     def __repr__(self):
@@ -109,7 +117,7 @@ class TestSuite(db.Model):
     test_type = db.Column(db.String(50), nullable=False)
     project_id = db.Column(db.Integer, db.ForeignKey("project.id"), nullable=False)
     mother_tests = db.relationship(
-        "MotherTest", cascade="all,delete", backref="test_suite"
+        "MotherTest", cascade=Constants.cascade_relations, backref="test_suite"
     )
 
 
@@ -128,15 +136,21 @@ class TestSuiteHistory(db.Model):
     )
     test_run_id = db.Column(db.Integer, db.ForeignKey("test_run.id"), nullable=False)
     test_run = db.relationship(
-        "TestRun", backref=db.backref("test_run", lazy=True, cascade="all,delete")
+        "TestRun",
+        backref=db.backref("test_run", lazy=True, cascade=Constants.cascade_relations),
     )
     test_suite_id = db.Column(
         db.Integer, db.ForeignKey("test_suite.id"), nullable=False
     )
     test_suite = db.relationship(
-        "TestSuite", backref=db.backref("test_suite", lazy=True, cascade="all,delete")
+        "TestSuite",
+        backref=db.backref(
+            "test_suite", lazy=True, cascade=Constants.cascade_relations
+        ),
     )
-    tests = db.relationship("Test", cascade="all,delete", backref="test_suite_history")
+    tests = db.relationship(
+        "Test", cascade=Constants.cascade_relations, backref="test_suite_history"
+    )
 
 
 class TestSuiteStatus(db.Model):
@@ -160,6 +174,9 @@ class MotherTest(db.Model):
     )
     test_resolution_id = db.Column(db.Integer, db.ForeignKey("test_resolution.id"))
     is_flaky = db.Column(db.Boolean())
+    notes = db.relationship(
+        "Notes", cascade=Constants.cascade_relations, backref="mother_test"
+    )
 
     def __repr__(self):
         return "<MotherTest {}>".format(self.name)
@@ -183,7 +200,10 @@ class Test(db.Model):
         db.Integer, db.ForeignKey("mother_test.id"), nullable=False
     )
     mother_test = db.relationship(
-        "MotherTest", backref=db.backref("mother_test", lazy=True, cascade="all,delete")
+        "MotherTest",
+        backref=db.backref(
+            "mother_test", lazy=True, cascade=Constants.cascade_relations
+        ),
     )
     test_status_id = db.Column(
         db.Integer, db.ForeignKey("test_status.id"), nullable=False
@@ -201,7 +221,9 @@ class Test(db.Model):
     test_suite_history_id = db.Column(
         db.Integer, db.ForeignKey("test_suite_history.id"), nullable=False
     )
-    test_retries = db.relationship("TestRetries", cascade="all,delete", backref="test")
+    test_retries = db.relationship(
+        "TestRetries", cascade=Constants.cascade_relations, backref="test"
+    )
 
     def __repr__(self):
         return "<Test {}>".format(self.id)
