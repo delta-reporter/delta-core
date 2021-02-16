@@ -19,3 +19,4 @@ class Constants:
         "To investigate": 5,
         "Environment issue": 6,
     }
+    cascade_relations = "all,delete"
