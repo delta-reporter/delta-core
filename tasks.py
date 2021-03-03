@@ -1,9 +1,10 @@
+import os
 from celery import Celery
 from celery.result import AsyncResult
 from data import crud
 
-REDIS_URL = "redis://redis:6379/0"
-BROKER_URL = "amqp://delta:123123@rabbit//"
+REDIS_URL = os.environ["REDIS_URL"]
+BROKER_URL = os.environ["BROKER_URL"]
 
 CELERY = Celery("tasks", backend=REDIS_URL, broker=BROKER_URL)
 
