@@ -15,3 +15,5 @@ flask-cors==3.0.8
 art==4.7
 requests==2.24.0
 pytz==2021.1
+celery==5.0.5
+redis==3.5.3
