@@ -9,7 +9,7 @@ RUN pip install --install-option="--prefix=/install" -r /requirements.txt
 
 FROM base
 COPY --from=builder /install /usr/local
-RUN pip install alembic python-dateutil
+RUN pip install alembic python-dateutil celery
 RUN apk update && apk add libpq
 ADD . /app
 WORKDIR /app

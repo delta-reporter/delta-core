@@ -18,6 +18,7 @@ cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 db = SQLAlchemy(app)
 
 from data import crud
+import tasks
 
 
 @app.route("/")
@@ -78,9 +79,9 @@ def create_project():
 def delete_project(project_id):
     logger.info("/delete_project/%s", project_id)
 
-    message = crud.Delete.delete_project(project_id)
+    job = tasks.delete_project.delay(project_id)
 
-    data = {"message": message}
+    data = {"message": "Deletion process started", "job_id": job.id}
 
     resp = jsonify(data)
     resp.status_code = 200
