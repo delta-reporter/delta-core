@@ -274,6 +274,7 @@ class Read:
                 .filter(models.TestRun.launch_id == models.Launch.id)
                 .filter(models.Launch.project_id == project_id)
                 .order_by(models.Launch.id.desc())
+                .limit(100)
                 .all()
             )
         except exc.SQLAlchemyError as e:
