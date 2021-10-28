@@ -458,9 +458,9 @@ class Read:
         return test_suite_history
 
     @staticmethod
-    def mother_test_by_name(test_name):
+    def mother_test_by_name(test_name, test_suite_id):
         try:
-            mother_test = models.MotherTest.query.filter_by(name=test_name).first()
+            mother_test = models.MotherTest.query.filter_by(name=test_name, test_suite_id=test_suite_id).first()
         except exc.SQLAlchemyError as e:
             logger.error(e)
             db.session.rollback()

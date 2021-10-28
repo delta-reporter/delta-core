@@ -550,7 +550,10 @@ def create_test_history():
     params = request.get_json(force=True)
     logger.info("/create_test_history/%s", params)
 
-    test_check = crud.Read.mother_test_by_name(params.get("name"))
+    test_check = crud.Read.mother_test_by_name(
+        params.get("name"),
+        params.get("test_suite_id")
+    )
 
     if not test_check:
         test_id = crud.Create.create_test(
