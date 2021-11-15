@@ -5,6 +5,7 @@ from data import constants
 from logzero import logger
 from sqlalchemy import exc
 from sqlalchemy.sql import func
+from datetime import date, timedelta
 from data.subqueries import TestCounts
 import re
 import os
@@ -742,6 +743,93 @@ class Read:
             smart_links = models.SmartLinks.query.filter_by(
                 project_id=project_id, location_id=location
             ).all()
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            smart_links = None
+
+        return smart_links
+
+
+    @staticmethod
+    def week_stats_daily(project_id):
+
+        t_counts = TestCounts()
+
+        def week_date():
+            dat = date.today() - timedelta(days=7)
+            return dat.isoformat()
+
+        try:
+            week_stats = (
+                db.session.query(
+                    func.date_trunc('day', models.TestRun.start_datetime),
+                    t_counts.total_tests_by_test_run_id.c.tests_count,
+                    t_counts.failed_tests_by_test_run_id.c.failed_tests_count,
+                    t_counts.passed_tests_by_test_run_id.c.passed_tests_count,
+                    t_counts.running_tests_by_test_run_id.c.running_tests_count,
+                    t_counts.incomplete_tests_by_test_run_id.c.incomplete_tests_count,
+                    t_counts.skipped_tests_by_test_run_id.c.skipped_tests_count,
+                )
+                .outerjoin(
+                    t_counts.total_tests_by_test_run_id,
+                    models.TestRun.id
+                    == t_counts.total_tests_by_test_run_id.c.test_run_id,
+                )
+                .outerjoin(
+                    t_counts.failed_tests_by_test_run_id,
+                    models.TestRun.id
+                    == t_counts.failed_tests_by_test_run_id.c.test_run_id,
+                )
+                .outerjoin(
+                    t_counts.passed_tests_by_test_run_id,
+                    models.TestRun.id
+                    == t_counts.passed_tests_by_test_run_id.c.test_run_id,
+                )
+                .outerjoin(
+                    t_counts.running_tests_by_test_run_id,
+                    models.TestRun.id
+                    == t_counts.running_tests_by_test_run_id.c.test_run_id,
+                )
+                .outerjoin(
+                    t_counts.incomplete_tests_by_test_run_id,
+                    models.TestRun.id
+                    == t_counts.incomplete_tests_by_test_run_id.c.test_run_id,
+                )
+                .outerjoin(
+                    t_counts.skipped_tests_by_test_run_id,
+                    models.TestRun.id
+                    == t_counts.skipped_tests_by_test_run_id.c.test_run_id,
+                )
+                .filter(models.TestRun.launch_id == models.Launch.id)
+                .filter(models.Launch.project_id == project_id)
+                .filter(models.TestRun.start_datetime <= date.today().isoformat())
+                .filter(models.TestRun.start_datetime >= week_date())
+                .order_by(func.date_trunc('day', models.TestRun.start_datetime).desc())
+                .all()
+            )
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            week_stats = None
+
+        return week_stats
+
+    @staticmethod
+    def tests_distribution_by_launch(project_id):
+        try:
+            smart_links = models.SmartLinks.query.filter_by(project_id=project_id).all()
+        except exc.SQLAlchemyError as e:
+            logger.error(e)
+            db.session.rollback()
+            smart_links = None
+
+        return smart_links
+
+    @staticmethod
+    def tests_failing_the_most(project_id):
+        try:
+            smart_links = models.SmartLinks.query.filter_by(project_id=project_id).all()
         except exc.SQLAlchemyError as e:
             logger.error(e)
             db.session.rollback()

@@ -1331,6 +1331,56 @@ def diff_dates(date1, date2, status):
         "microseconds": diff.microseconds,
     }
 
+@app.route("/api/v1/weekly_stats/<int:project_id>", methods=["GET"])
+def get_weekly_stats(project_id):
+    logger.info("/weekly_stats/%s", project_id)
+    result = crud.Read.week_stats_daily(project_id)
+
+    if result:
+        weekly_stats = []
+        index = -1
+        days_index = {}
+        for (
+            day,
+            total_count,
+            failed_count,
+            passed_count,
+            running_count,
+            incomplete_count,
+            skipped_count,
+        ) in result:
+            if weekly_stats == [] or day not in list(days_index.keys()):
+                index = index + 1
+                days_index[day] = index
+                weekly_stats.append(
+                    {
+                        "date": day,
+                        "tests_total": none_checker(total_count),
+                        "tests_failed": none_checker(failed_count),
+                        "tests_passed": none_checker(passed_count),
+                        "tests_running": none_checker(running_count),
+                        "tests_incomplete": none_checker(incomplete_count),
+                        "tests_skipped": none_checker(skipped_count),
+                    }
+                )
+            weekly_stats[days_index[day]] = {
+                    "date": day,
+                    "tests_total": none_checker(total_count) + weekly_stats[days_index[day]].get("tests_total"),
+                    "tests_failed": none_checker(failed_count) + weekly_stats[days_index[day]].get("tests_failed"),
+                    "tests_passed": none_checker(passed_count) + weekly_stats[days_index[day]].get("tests_passed"),
+                    "tests_running": none_checker(running_count) + weekly_stats[days_index[day]].get("tests_running"),
+                    "tests_incomplete": none_checker(incomplete_count) + weekly_stats[days_index[day]].get("tests_incomplete"),
+                    "tests_skipped": none_checker(skipped_count) + weekly_stats[days_index[day]].get("tests_skipped"),
+                }
+        data = weekly_stats
+    else:
+        data = None
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
 
 def none_checker(element):
     return element if element else 0
