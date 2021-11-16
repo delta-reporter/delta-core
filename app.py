@@ -1303,34 +1303,6 @@ def delete_smart_link(smart_link_id):
     return resp
 
 
-@app.errorhandler(404)
-def notfound(error):
-    data = {"message": "The endpoint requested was not found"}
-
-    resp = jsonify(data)
-    resp.status_code = 404
-
-    return resp
-
-
-def diff_dates(date1, date2, status):
-    if not date1 or status == "Skipped":
-        return None
-    if not date2:
-        date2 = datetime.datetime.now()
-
-    diff = relativedelta(date2, date1)
-
-    return {
-        "years": diff.years,
-        "months": diff.months,
-        "days": diff.days,
-        "hours": diff.hours,
-        "minutes": diff.minutes,
-        "seconds": diff.seconds,
-        "microseconds": diff.microseconds,
-    }
-
 @app.route("/api/v1/weekly_stats/<int:project_id>", methods=["GET"])
 def get_weekly_stats(project_id):
     logger.info("/weekly_stats/%s", project_id)
@@ -1372,6 +1344,19 @@ def get_weekly_stats(project_id):
                     "tests_incomplete": none_checker(incomplete_count) + weekly_stats[days_index[day]].get("tests_incomplete"),
                     "tests_skipped": none_checker(skipped_count) + weekly_stats[days_index[day]].get("tests_skipped"),
                 }
+        last_seven_days = [datetime.date.today() - datetime.timedelta(days=x+1) for x in range(7)]
+        no_data_day = {
+            "tests_total": 0,
+            "tests_failed": 0,
+            "tests_passed": 0,
+            "tests_running": 0,
+            "tests_incomplete": 0,
+            "tests_skipped": 0,
+        }
+        for day in last_seven_days:
+            if day not in days_index.keys():
+                no_data_day.update({"date": day})
+                weekly_stats.append(no_data_day)
         data = weekly_stats
     else:
         data = None
@@ -1380,6 +1365,35 @@ def get_weekly_stats(project_id):
     resp.status_code = 200
 
     return resp
+
+
+@app.errorhandler(404)
+def notfound(error):
+    data = {"message": "The endpoint requested was not found"}
+
+    resp = jsonify(data)
+    resp.status_code = 404
+
+    return resp
+
+
+def diff_dates(date1, date2, status):
+    if not date1 or status == "Skipped":
+        return None
+    if not date2:
+        date2 = datetime.datetime.now()
+
+    diff = relativedelta(date2, date1)
+
+    return {
+        "years": diff.years,
+        "months": diff.months,
+        "days": diff.days,
+        "hours": diff.hours,
+        "minutes": diff.minutes,
+        "seconds": diff.seconds,
+        "microseconds": diff.microseconds,
+    }
 
 
 def none_checker(element):
