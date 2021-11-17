@@ -1306,6 +1306,74 @@ def delete_smart_link(smart_link_id):
     return resp
 
 
+@app.route("/api/v1/weekly_stats/<int:project_id>", methods=["GET"])
+def get_weekly_stats(project_id):
+    logger.info("/weekly_stats/%s", project_id)
+    result = crud.Read.week_stats_daily(project_id)
+
+    if result:
+        weekly_stats = []
+        index = -1
+        days_index = {}
+        for (
+            day,
+            total_count,
+            failed_count,
+            passed_count,
+            running_count,
+            incomplete_count,
+            skipped_count,
+        ) in result:
+            if weekly_stats == [] or day.date() not in list(days_index.keys()):
+                index = index + 1
+                days_index[day.date()] = index
+                weekly_stats.append(
+                    {
+                        "date": day.date(),
+                        "tests_total": none_checker(total_count),
+                        "tests_failed": none_checker(failed_count),
+                        "tests_passed": none_checker(passed_count),
+                        "tests_running": none_checker(running_count),
+                        "tests_incomplete": none_checker(incomplete_count),
+                        "tests_skipped": none_checker(skipped_count),
+                    }
+                )
+            weekly_stats[days_index[day.date()]] = {
+                    "date": day.date(),
+                    "tests_total": none_checker(total_count) + weekly_stats[days_index[day.date()]].get("tests_total"),
+                    "tests_failed": none_checker(failed_count) + weekly_stats[days_index[day.date()]].get("tests_failed"),
+                    "tests_passed": none_checker(passed_count) + weekly_stats[days_index[day.date()]].get("tests_passed"),
+                    "tests_running": none_checker(running_count) + weekly_stats[days_index[day.date()]].get("tests_running"),
+                    "tests_incomplete": none_checker(incomplete_count) + weekly_stats[days_index[day.date()]].get("tests_incomplete"),
+                    "tests_skipped": none_checker(skipped_count) + weekly_stats[days_index[day.date()]].get("tests_skipped"),
+                }
+
+        last_seven_days = [datetime.date.today() - datetime.timedelta(days=x+1) for x in range(7)]
+
+        stat_days = list(days_index.keys())
+        for day in last_seven_days:
+            if day not in stat_days:
+                weekly_stats.append({
+                    "date": day,
+                    "tests_total": 0,
+                    "tests_failed": 0,
+                    "tests_passed": 0,
+                    "tests_running": 0,
+                    "tests_incomplete": 0,
+                    "tests_skipped": 0,
+                })
+        weekly_stats.sort(key=lambda item:item['date'], reverse=False)
+
+        data = weekly_stats
+    else:
+        data = None
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
+
 @app.errorhandler(404)
 def notfound(error):
     data = {"message": "The endpoint requested was not found"}
