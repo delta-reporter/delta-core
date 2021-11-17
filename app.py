@@ -1321,12 +1321,12 @@ def get_weekly_stats(project_id):
             incomplete_count,
             skipped_count,
         ) in result:
-            if weekly_stats == [] or day not in list(days_index.keys()):
+            if weekly_stats == [] or day.date() not in list(days_index.keys()):
                 index = index + 1
-                days_index[day] = index
+                days_index[day.date()] = index
                 weekly_stats.append(
                     {
-                        "date": day,
+                        "date": day.date(),
                         "tests_total": none_checker(total_count),
                         "tests_failed": none_checker(failed_count),
                         "tests_passed": none_checker(passed_count),
@@ -1335,28 +1335,32 @@ def get_weekly_stats(project_id):
                         "tests_skipped": none_checker(skipped_count),
                     }
                 )
-            weekly_stats[days_index[day]] = {
-                    "date": day,
-                    "tests_total": none_checker(total_count) + weekly_stats[days_index[day]].get("tests_total"),
-                    "tests_failed": none_checker(failed_count) + weekly_stats[days_index[day]].get("tests_failed"),
-                    "tests_passed": none_checker(passed_count) + weekly_stats[days_index[day]].get("tests_passed"),
-                    "tests_running": none_checker(running_count) + weekly_stats[days_index[day]].get("tests_running"),
-                    "tests_incomplete": none_checker(incomplete_count) + weekly_stats[days_index[day]].get("tests_incomplete"),
-                    "tests_skipped": none_checker(skipped_count) + weekly_stats[days_index[day]].get("tests_skipped"),
+            weekly_stats[days_index[day.date()]] = {
+                    "date": day.date(),
+                    "tests_total": none_checker(total_count) + weekly_stats[days_index[day.date()]].get("tests_total"),
+                    "tests_failed": none_checker(failed_count) + weekly_stats[days_index[day.date()]].get("tests_failed"),
+                    "tests_passed": none_checker(passed_count) + weekly_stats[days_index[day.date()]].get("tests_passed"),
+                    "tests_running": none_checker(running_count) + weekly_stats[days_index[day.date()]].get("tests_running"),
+                    "tests_incomplete": none_checker(incomplete_count) + weekly_stats[days_index[day.date()]].get("tests_incomplete"),
+                    "tests_skipped": none_checker(skipped_count) + weekly_stats[days_index[day.date()]].get("tests_skipped"),
                 }
+
         last_seven_days = [datetime.date.today() - datetime.timedelta(days=x+1) for x in range(7)]
-        no_data_day = {
-            "tests_total": 0,
-            "tests_failed": 0,
-            "tests_passed": 0,
-            "tests_running": 0,
-            "tests_incomplete": 0,
-            "tests_skipped": 0,
-        }
+
+        stat_days = list(days_index.keys())
         for day in last_seven_days:
-            if day not in days_index.keys():
-                no_data_day.update({"date": day})
-                weekly_stats.append(no_data_day)
+            if day not in stat_days:
+                weekly_stats.append({
+                    "date": day,
+                    "tests_total": 0,
+                    "tests_failed": 0,
+                    "tests_passed": 0,
+                    "tests_running": 0,
+                    "tests_incomplete": 0,
+                    "tests_skipped": 0,
+                })
+        weekly_stats.sort(key=lambda item:item['date'], reverse=False)
+
         data = weekly_stats
     else:
         data = None
