@@ -1374,6 +1374,39 @@ def get_weekly_stats(project_id):
     return resp
 
 
+@app.route("/api/v1/most_failed_tests/<int:project_id>", methods=["GET"])
+def most_failed_tests_by_project(project_id):
+    logger.info("/most_failed_tests/%s", project_id)
+
+    failed_tests_data = crud.Read.tests_failing_the_most(project_id)
+
+    data = []
+
+    for (
+        test_id,
+        name,
+        is_flaky,
+        test_type,
+        test_suite,
+        failed_count
+    ) in failed_tests_data:
+        data.append(
+            {
+                "id": test_id,
+                "name": name,
+                "is_flaky": is_flaky,
+                "test_type": test_type,
+                "test_suite": test_suite,
+                "failed_count": none_checker(failed_count)
+            }
+        )
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
+
+
 @app.errorhandler(404)
 def notfound(error):
     data = {"message": "The endpoint requested was not found"}
