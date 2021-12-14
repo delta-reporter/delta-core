@@ -821,7 +821,7 @@ class Read:
     def tests_failing_the_most(project_id):
 
         def week_date():
-            dat = date.today() - timedelta(days=60)
+            dat = date.today() - timedelta(days=7)
             return dat.isoformat()
 
         try:
