@@ -1,3 +1,4 @@
+from sqlalchemy.sql.expression import desc
 import models
 import datetime
 from app import db
@@ -815,27 +816,48 @@ class Read:
 
         return week_stats
 
-    @staticmethod
-    def tests_distribution_by_launch(project_id):
-        try:
-            smart_links = models.SmartLinks.query.filter_by(project_id=project_id).all()
-        except exc.SQLAlchemyError as e:
-            logger.error(e)
-            db.session.rollback()
-            smart_links = None
-
-        return smart_links
 
     @staticmethod
     def tests_failing_the_most(project_id):
+
+        def week_date():
+            dat = date.today() - timedelta(days=7)
+            return dat.isoformat()
+
         try:
-            smart_links = models.SmartLinks.query.filter_by(project_id=project_id).all()
+            failed_stats = db.session.query(
+                models.MotherTest.id,
+                models.MotherTest.name,
+                models.MotherTest.is_flaky,
+                models.TestSuite.test_type,
+                models.TestSuite.name,
+                func.count("*").label("tests_count")
+            ).filter(
+                models.Test.start_datetime <= date.today().isoformat()
+            ).filter(
+                models.Test.start_datetime >= week_date()
+            ).filter(
+                models.Test.test_status_id == 1
+            ).filter(
+                models.MotherTest.id == models.Test.mother_test_id
+            ).filter(
+                models.TestSuite.id == models.MotherTest.test_suite_id
+            ).filter(
+                models.TestSuite.project_id == project_id
+            ).group_by(
+                models.MotherTest.id,
+                models.TestSuite.id
+            ).order_by(
+                desc('tests_count')
+            ).limit(
+                12
+            ).all()
         except exc.SQLAlchemyError as e:
             logger.error(e)
             db.session.rollback()
-            smart_links = None
+            failed_stats = None
 
-        return smart_links
+        return failed_stats
 
 
 class Update:
